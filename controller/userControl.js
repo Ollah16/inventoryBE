@@ -49,7 +49,7 @@ const handleUser_Cart = async (req, res) => {
     }
 }
 
-const handle_Cart = async (req, res) => {
+const handle_CartItem = async (req, res) => {
     let { id } = req.userId
     let { quantity, customerQuantity, _id, item, price, image } = req.body
     let user = await User.findById(id)
@@ -111,4 +111,4 @@ const handleRemoveItem = async (req, res) => {
 }
 
 
-module.exports = { handle_Registration, handle_Login, handleUser_Cart, handleClearCart, handleRemoveItem, handle_Cart }
+module.exports = { handle_Registration, handle_Login, handleUser_Cart, handleClearCart, handleRemoveItem, handle_CartItem }
