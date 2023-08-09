@@ -1,4 +1,4 @@
-const { Inventory } = require("../models/inventoryModel")
+const { Inventory, User } = require("../models/inventoryModel")
 
 const handle_AddGoods = async (req, res) => {
     let { item, quantity, price, detail, itemEdit, addItem, customerQuantity } = req.body
@@ -6,63 +6,92 @@ const handle_AddGoods = async (req, res) => {
         res.send(req.error.message)
     }
     else {
-        let allGoods = Inventory({ item, quantity, image: req.file.filename, price, detail, itemEdit, addItem, customerQuantity })
-        allGoods.save()
+        try {
+            let allGoods = Inventory({ item, quantity, image: req.file.filename, price, detail, itemEdit, addItem, customerQuantity })
+            allGoods.save()
+        }
+        catch (err) { console.error(err) }
     }
 
 }
 
 const handle_AllItem = async (req, res) => {
-    let allGoods = await Inventory.find({})
-    res.json({ allGoods })
+    try {
+        let allGoods = await Inventory.find({})
+        res.json({ allGoods })
+    }
+    catch (err) { console.err(err) }
 }
 
 const handle_Viewmore = async (req, res) => {
     let { itemId } = req.params
-    let viewed = await Inventory.findById(itemId)
-    res.json({ viewed })
+    try {
+        let viewed = await Inventory.findById(itemId)
+        res.json({ viewed })
+    }
+    catch (err) { console.error(err) }
 }
 
 const handle_Edit = async (req, res) => {
-    let { itemId } = req.params
-    let findItem = await Inventory.findByIdAndUpdate(itemId, { itemEdit: false })
+    try {
+        let { itemId } = req.params
+        let findItem = await Inventory.findByIdAndUpdate(itemId, { itemEdit: false })
+    }
+    catch (err) { console.error(err) }
 }
 
 const handle_Done = async (req, res) => {
     let { itemId } = req.params
     let { item, price, detail, quantity } = req.body
-    if (item) {
-        let updateArea = { item, price, detail, quantity }
-        let findItem = await Inventory.findByIdAndUpdate(itemId, { ...updateArea, itemEdit: true })
+    if (item && req.file.filename) {
+        try {
+            let updateArea = { item, price, detail, quantity, image: req.file.filename }
+            let findItem = await Inventory.findByIdAndUpdate(itemId, { ...updateArea, itemEdit: true })
+        }
+        catch (err) { console.error(err) }
     }
     else {
-        let findItem = await Inventory.findByIdAndUpdate(itemId, { itemEdit: true })
+        try {
+            let findItem = await Inventory.findByIdAndUpdate(itemId, { itemEdit: true })
+        }
+        catch (err) { console.error(err) }
     }
 
 }
 
 const handle_Delete = async (req, res) => {
     let { itemId } = req.params
-    let deleteItem = await Inventory.findByIdAndRemove(itemId)
+    try {
+        let deleteItem = await Inventory.findByIdAndRemove(itemId)
+    }
+    catch (err) { console.error(err) }
 }
 
 const handle_CheckOut = async (req, res) => {
-    let { allGoods } = req.body
-    let updateQuantity = allGoods.map(async (item) => {
-        const filter = { _id: item._id };
-        const updQty = item.quantity -= item.customerQuantity;
-        const update = { $set: { quantity: updQty } };
-        return await Inventory.updateOne(filter, update)
-    })
-
-    const updateResults = await Promise.all(updateQuantity);
-    let confirmUpdates = updateResults.every((result) => result.modifiedCount === 1)
-    if (confirmUpdates) {
-        res.send('payment successful')
+    let { id } = req.userId
+    let findUser = await User.findById(id)
+    let { cart } = findUser
+    let updatedInventory;
+    try {
+        for (const cartItem of cart) {
+            const inventoryItemId = cartItem._id;
+            const newQuantity = cartItem.quantity - cartItem.customerQuantity;
+            updatedInventory = await Inventory.findByIdAndUpdate(inventoryItemId, { quantity: newQuantity });
+        }
     }
-    else {
-        res.send('payment unsuccessful')
+    catch (err) { console.error(err) }
+    if (updatedInventory) {
+        try {
+            await User.findByIdAndUpdate(id, { cart: [] })
+            return res.send('payment successful')
+        }
+        catch (err) { console.error(err) }
     }
+    return res.send('payment unsuccessfu')
 }
+
+
+
+
 
 module.exports = { handle_AddGoods, handle_AllItem, handle_Viewmore, handle_Done, handle_Edit, handle_Delete, handle_CheckOut }

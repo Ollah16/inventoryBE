@@ -1,5 +1,18 @@
 const express = require("express")
 const multer = require('multer')
+const jwt = require('jsonwebtoken')
+const jwtSecretKey = process.env.JWTSECRETKEY
+
+const jwtMiddleWare = async (req, res, next) => {
+    let { authorization } = req.headers
+    let [, myJwt] = authorization.split(' ')
+    let userId = jwt.verify(myJwt, jwtSecretKey)
+    if (userId) {
+        req.userId = userId
+        next();
+    }
+}
+
 
 let storage = multer.diskStorage({
     filename: (req, file, cb) => {
@@ -22,8 +35,10 @@ const fileFilter = (req, file, cb) => {
         req.error = { message: 'file not supported' }
     }
 }
+
 let myStorage = multer({ storage, fileFilter })
-const { handle_AddGoods, handle_AllItem, handle_Viewmore, handle_Edit, handle_Done, handle_Delete, handle_CheckOut } = require("../controller/inventoryControl")
+
+const { handle_AddGoods, handle_AllItem, handle_Viewmore, handle_Edit, handle_Done, handle_Delete, handle_CheckOut, handle_Cart, handleRemoveItem, handleClearCart } = require("../controller/inventoryControl")
 
 const router = express.Router()
 router.post('/addGoods', myStorage.single('image'), handle_AddGoods)
@@ -32,5 +47,6 @@ router.get('/viewmore/:itemId', handle_Viewmore)
 router.patch('/editItem/:itemId', handle_Edit)
 router.post('/editDone/:itemId', myStorage.single('image'), handle_Done)
 router.delete('/deleteItem/:itemId', handle_Delete)
-router.post('/checkout', handle_CheckOut)
+router.post('/checkout', jwtMiddleWare, handle_CheckOut)
+
 module.exports = router;
