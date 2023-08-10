@@ -6,10 +6,6 @@ app.use(cors())
 app.use(express.urlencoded({ extended: true }))
 const inventory = require("./routes/inventoryRoute")
 const user = require("./routes/userRoute")
-app.get('/', (req, res) => {
-    res.send('hello')
-})
-
 app.use("/store", inventory)
 app.use("/user", user)
 app.use(express.static('images'))
