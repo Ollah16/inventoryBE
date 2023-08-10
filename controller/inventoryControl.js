@@ -90,4 +90,7 @@ const handle_CheckOut = async (req, res) => {
     return res.send('payment unsuccessfu')
 }
 
-module.exports = { handle_AddGoods, handle_AllItem, handle_Viewmore, handle_Done, handle_Edit, handle_Delete, handle_CheckOut }
+const handleStore = (req, res) => {
+    res.send('hello store')
+}
+module.exports = { handle_AddGoods, handle_AllItem, handle_Viewmore, handle_Done, handle_Edit, handle_Delete, handle_CheckOut, handleStore }

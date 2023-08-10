@@ -38,7 +38,7 @@ const fileFilter = (req, file, cb) => {
 
 let myStorage = multer({ storage, fileFilter })
 
-const { handle_AddGoods, handle_AllItem, handle_Viewmore, handle_Edit, handle_Done, handle_Delete, handle_CheckOut, handle_Cart, handleRemoveItem, handleClearCart } = require("../controller/inventoryControl")
+const { handle_AddGoods, handle_AllItem, handle_Viewmore, handle_Edit, handle_Done, handle_Delete, handle_CheckOut, handleStore } = require("../controller/inventoryControl")
 
 const router = express.Router()
 router.post('/addGoods', myStorage.single('image'), handle_AddGoods)
@@ -48,8 +48,6 @@ router.patch('/editItem/:itemId', handle_Edit)
 router.post('/editDone/:itemId', myStorage.single('image'), handle_Done)
 router.delete('/deleteItem/:itemId', handle_Delete)
 router.post('/checkout', jwtMiddleWare, handle_CheckOut)
-router.get('/', (req, res) => {
-    res.send('store')
-})
+router.get('/', handleStore)
 
 module.exports = router;
