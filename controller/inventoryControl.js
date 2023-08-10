@@ -16,11 +16,12 @@ const handle_AddGoods = async (req, res) => {
 }
 
 const handle_AllItem = async (req, res) => {
-    try {
-        let allGoods = await Inventory.find({})
-        res.json({ allGoods })
-    }
-    catch (err) { console.err(err) }
+    // try {
+    //     let allGoods = await Inventory.find({})
+    //     res.json({ allGoods })
+    // }
+    // catch (err) { console.err(err) }
+    res.send('hello goods')
 }
 
 const handle_Viewmore = async (req, res) => {
@@ -90,7 +91,5 @@ const handle_CheckOut = async (req, res) => {
     return res.send('payment unsuccessfu')
 }
 
-const handleStore = (req, res) => {
-    res.send('hello store')
-}
-module.exports = { handle_AddGoods, handle_AllItem, handle_Viewmore, handle_Done, handle_Edit, handle_Delete, handle_CheckOut, handleStore }
+
+module.exports = { handle_AddGoods, handle_AllItem, handle_Viewmore, handle_Done, handle_Edit, handle_Delete, handle_CheckOut }

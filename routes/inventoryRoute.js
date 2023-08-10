@@ -48,6 +48,5 @@ router.patch('/editItem/:itemId', handle_Edit)
 router.post('/editDone/:itemId', myStorage.single('image'), handle_Done)
 router.delete('/deleteItem/:itemId', handle_Delete)
 router.post('/checkout', jwtMiddleWare, handle_CheckOut)
-router.get('/', handleStore)
 
 module.exports = router;
