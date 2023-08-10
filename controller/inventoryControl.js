@@ -16,12 +16,11 @@ const handle_AddGoods = async (req, res) => {
 }
 
 const handle_AllItem = async (req, res) => {
-    // try {
-    //     let allGoods = await Inventory.find({})
-    //     res.json({ allGoods })
-    // }
-    // catch (err) { console.err(err) }
-    res.send('hello goods')
+    try {
+        let allGoods = await Inventory.find({})
+        res.json({ allGoods })
+    }
+    catch (err) { console.err(err) }
 }
 
 const handle_Viewmore = async (req, res) => {
