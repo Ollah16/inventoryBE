@@ -95,7 +95,7 @@ const handle_CheckOut = async (req, res) => {
     if (updatedInventory) {
         let userDetails = await User.findById(id)
         let { cart, allOrders } = userDetails
-        allOrders = [...allOrders, { date: `${year}/${month}/${day} '' ${hours}/${minutes}/${seconds}`, showOrder: false, cart }]
+        allOrders = [...allOrders, { date: `${year}/${month}/${day}   ${hours}:${minutes}:${seconds}`, showOrder: false, cart }]
 
         try {
             let success = await User.findByIdAndUpdate(id, { allOrders: allOrders, cart: [] })
