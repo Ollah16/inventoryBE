@@ -146,4 +146,24 @@ const handle_FetchAllOrders = async (req, res) => {
 
 }
 
-module.exports = { handle_Registration, handle_Login, handleUser_Cart, handleClearCart, handleRemoveItem, handle_CartItem, handleAddPDetails, handleAddAddress, handle_FetchAllOrders }
+const handle_Fetch_Address = async (res, req) => {
+    let { id } = req.userId
+    try {
+        let foundUser = await User.findById(id)
+        let { address } = foundUser
+        res.json({ address })
+    }
+    catch (err) { console.error(err) }
+}
+
+const handle_Fetch_Personal = async (res, req) => {
+    let { id } = req.userId
+    try {
+        let foundUser = await User.findById(id)
+        let { personalDetails } = foundUser
+        res.json({ personalDetails })
+    }
+    catch (err) { console.error(err) }
+}
+
+module.exports = { handle_Fetch_Address, handle_Fetch_Personal, handle_Registration, handle_Login, handleUser_Cart, handleClearCart, handleRemoveItem, handle_CartItem, handleAddPDetails, handleAddAddress, handle_FetchAllOrders }
