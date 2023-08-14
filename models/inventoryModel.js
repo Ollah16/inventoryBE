@@ -53,13 +53,20 @@ let userSchema = new Schema({
         price: Number,
         image: String
     }],
+
     allOrders: [{
         date: String,
         showOrder: Boolean,
-        item: String,
-        customerQuantity: Number,
-        cost: Number,
-        price: Number
+        cart: [{
+            customerQuantity: Number,
+            itemId: {
+                type: Schema.Types.ObjectId,
+                ref: Inventory
+            },
+            item: String,
+            price: Number,
+            image: String
+        }]
     }]
 })
 

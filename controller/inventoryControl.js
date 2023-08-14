@@ -72,6 +72,12 @@ const handle_CheckOut = async (req, res) => {
     let findUser = await User.findById(id)
     let { cart } = findUser
     let updatedInventory;
+    const year = currentDate.getFullYear();
+    const month = currentDate.getMonth() + 1;
+    const day = currentDate.getDate();
+    const hours = currentDate.getHours();
+    const minutes = currentDate.getMinutes();
+    const seconds = currentDate.getSeconds();
 
     try {
         for (const cartItem of cart) {
@@ -88,17 +94,11 @@ const handle_CheckOut = async (req, res) => {
     if (updatedInventory) {
         let userDetails = await User.findById(id)
         let { cart, allOrders } = userDetails
-        let newPastOrder = allOrders.map((orders) => ({
-            ...orders,
-            date: Date.now(),
-            showOrder: false,
-            cart
-        }))
+        allOrders = [...allOrders, { date: `${year}/${month}/${day} '' ${hours}/${minutes}/${seconds}`, showOrder: false, cart }]
 
         try {
-            console.log('hi')
-
-            await User.findByIdAndUpdate(id, { $push: { allOrders: newPastOrder, cart: [] } })
+            let success = await User.findByIdAndUpdate(id, { allOrders: allOrders, cart: [] })
+            console.log(success)
             return res.send('payment successful')
         }
         catch (err) { console.error(err) }
