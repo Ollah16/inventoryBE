@@ -1,5 +1,5 @@
 const express = require("express")
-const { handle_Registration, handle_Login, handleUser_Cart, handleClearCart, handleRemoveItem, handle_CartItem, handleAddPDetails, handleAddAddress, } = require("../controller/userControl")
+const { handle_Registration, handle_Login, handleUser_Cart, handleClearCart, handleRemoveItem, handle_CartItem, handleAddPDetails, handleAddAddress, handle_FetchAllOrders, } = require("../controller/userControl")
 const router = express.Router()
 const jwt = require('jsonwebtoken')
 const jwtSecretKey = process.env.JWTSECRETKEY
@@ -23,4 +23,5 @@ router.patch('/removeItem/:itemId', jwtMiddleWare, handleRemoveItem)
 router.delete('/clearCart', jwtMiddleWare, handleClearCart)
 router.post('/personalDetails', jwtMiddleWare, handleAddPDetails)
 router.post('/addAddress', jwtMiddleWare, handleAddAddress)
+router.post('/fetchAllOrders', jwtMiddleWare, handle_FetchAllOrders)
 module.exports = router;

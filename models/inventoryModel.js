@@ -53,7 +53,7 @@ let userSchema = new Schema({
         price: Number,
         image: String
     }],
-    pastOrders: [{
+    allOrders: [{
         date: String,
         showOrder: Boolean,
         item: String,

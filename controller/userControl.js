@@ -4,14 +4,14 @@ const jwt = require('jsonwebtoken')
 const jwtSecretKey = process.env.JWTSECRETKEY
 
 const handle_Registration = async (req, res) => {
-    let { email, password, firstName, lastName, address, personalDetails, cart, pastOrders } = req.body
+    let { email, password, firstName, lastName, address, personalDetails, cart, allOrders } = req.body
     let salt = await bcrypt.genSalt()
     let myPass = await bcrypt.hash(password, salt)
     let checkEmail = await User.findOne({ email })
 
     if (!checkEmail) {
         try {
-            let newUser = await User({ email, password: myPass, firstName, lastName, address, personalDetails: { email, firstName, lastName }, pastOrders, cart })
+            let newUser = await User({ email, password: myPass, firstName, lastName, address, personalDetails: { email, firstName, lastName }, allOrders, cart })
             newUser.save()
             res.send('registration successful')
         }
@@ -114,20 +114,35 @@ const handleRemoveItem = async (req, res) => {
 const handleAddPDetails = async (req, res) => {
     let { id } = req.userId
     let { title, firstName, lastName, email, password, mobileNumber, alterNumber } = req.body
-    let foundUser = await User.findByIdAndUpdate(id, { personalDetails: { title, firstName, lastName, email, password, mobileNumber, alterNumber } })
-    let findUser = await User.findById(id)
-    let { personalDetails } = findUser
-    res.json({ personalDetails })
+    try {
+        let foundUser = await User.findByIdAndUpdate(id, { personalDetails: { title, firstName, lastName, email, password, mobileNumber, alterNumber } })
+        let findUser = await User.findById(id)
+        let { personalDetails } = findUser
+        res.json({ personalDetails })
+    }
+    catch (err) { console.error(err) }
 }
 
 const handleAddAddress = async (req, res) => {
     let { id } = req.userId
     let { title, firstName, lastName, buildNum, buildname, flatNum, street, townStreet, county, addressNick } = req.body
-    let foundUser = await User.findByIdAndUpdate(id, { address: { title, firstName, lastName, buildNum, buildname, flatNum, street, townStreet, county, addressNick } })
-    let findUser = await User.findById(id)
-    let { address } = findUser
-    res.json({ address })
+    try {
+        let foundUser = await User.findByIdAndUpdate(id, { address: { title, firstName, lastName, buildNum, buildname, flatNum, street, townStreet, county, addressNick } })
+        let findUser = await User.findById(id)
+        let { address } = findUser
+        res.json({ address })
+    }
+    catch (err) { console.error(err) }
 }
 
+const handle_FetchAllOrders = async (req, res) => {
+    let { id } = req.userId
+    try {
+        let allOrders = await User.findById(id).select('allOrders')
+        res.json({ allOrders })
+    }
+    catch (err) { console.err(err) }
 
-module.exports = { handle_Registration, handle_Login, handleUser_Cart, handleClearCart, handleRemoveItem, handle_CartItem, handleAddPDetails, handleAddAddress }
+}
+
+module.exports = { handle_Registration, handle_Login, handleUser_Cart, handleClearCart, handleRemoveItem, handle_CartItem, handleAddPDetails, handleAddAddress, handle_FetchAllOrders }
