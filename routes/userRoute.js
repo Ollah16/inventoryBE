@@ -23,5 +23,5 @@ router.patch('/removeItem/:itemId', jwtMiddleWare, handleRemoveItem)
 router.delete('/clearCart', jwtMiddleWare, handleClearCart)
 router.post('/personalDetails', jwtMiddleWare, handleAddPDetails)
 router.post('/addAddress', jwtMiddleWare, handleAddAddress)
-router.post('/fetchAllOrders', jwtMiddleWare, handle_FetchAllOrders)
+router.get('/fetchAllOrders', jwtMiddleWare, handle_FetchAllOrders)
 module.exports = router;
