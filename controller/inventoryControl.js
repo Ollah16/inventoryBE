@@ -99,7 +99,6 @@ const handle_CheckOut = async (req, res) => {
 
         try {
             let success = await User.findByIdAndUpdate(id, { allOrders: allOrders, cart: [] })
-            console.log(success)
             return res.send('payment successful')
         }
         catch (err) { console.error(err) }

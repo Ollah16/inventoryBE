@@ -138,7 +138,8 @@ const handleAddAddress = async (req, res) => {
 const handle_FetchAllOrders = async (req, res) => {
     let { id } = req.userId
     try {
-        let allOrders = await User.findById(id).select('allOrders')
+        let pastOrders = await User.findById(id)
+        let { allOrders } = pastOrders
         res.json({ allOrders })
     }
     catch (err) { console.err(err) }
