@@ -72,6 +72,7 @@ const handle_CheckOut = async (req, res) => {
     let findUser = await User.findById(id)
     let { cart } = findUser
     let updatedInventory;
+    const currentDate = new Date()
     const year = currentDate.getFullYear();
     const month = currentDate.getMonth() + 1;
     const day = currentDate.getDate();
