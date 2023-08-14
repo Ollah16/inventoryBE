@@ -72,11 +72,15 @@ const handle_CheckOut = async (req, res) => {
     let findUser = await User.findById(id)
     let { cart } = findUser
     let updatedInventory;
+
     try {
         for (const cartItem of cart) {
             const inventoryItemId = cartItem._id;
             const newQuantity = cartItem.quantity - cartItem.customerQuantity;
-            updatedInventory = await Inventory.findByIdAndUpdate(inventoryItemId, { quantity: newQuantity });
+            let itemQuantity = await Inventory.findById(inventoryItemId).select('quantity')
+            let { quantity } = itemQuantity
+            quantity -= cartItem.customerQuantity
+            updatedInventory = await Inventory.findByIdAndUpdate(inventoryItemId, { quantity: quantity })
         }
     }
     catch (err) { console.error(err) }
@@ -92,12 +96,14 @@ const handle_CheckOut = async (req, res) => {
         }))
 
         try {
+            console.log('hi')
+
             await User.findByIdAndUpdate(id, { $push: { allOrders: newPastOrder, cart: [] } })
             return res.send('payment successful')
         }
         catch (err) { console.error(err) }
     }
-    return res.send('payment unsuccessfu')
+    return res.send('payment unsuccessful')
 }
 
 
