@@ -20,6 +20,29 @@ let Inventory = model('allGood', inventorySchema)
 let userSchema = new Schema({
     email: String,
     password: String,
+    firstName: String,
+    lastName: String,
+    address: {
+        title: String,
+        firstName: String,
+        lastName: String,
+        buildNum: Number,
+        buildname: Number,
+        flatNum: Number,
+        street: String,
+        townStreet: String,
+        county: String,
+        addressNick: String
+    },
+    personalDetails: {
+        title: String,
+        firstName: String,
+        lastName: String,
+        email: String,
+        password: String,
+        mobileNumber: Number,
+        alterNumber: Number
+    },
     cart: [{
         customerQuantity: Number,
         itemId: {
@@ -28,8 +51,15 @@ let userSchema = new Schema({
         },
         item: String,
         price: Number,
-        quantity: Number,
         image: String
+    }],
+    pastOrders: [{
+        date: String,
+        showOrder: Boolean,
+        item: String,
+        customerQuantity: Number,
+        cost: Number,
+        price: Number
     }]
 })
 

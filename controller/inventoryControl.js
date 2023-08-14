@@ -80,9 +80,19 @@ const handle_CheckOut = async (req, res) => {
         }
     }
     catch (err) { console.error(err) }
+
     if (updatedInventory) {
+        let prevOrder = await User.findById(id).select('cart')
+        let pastOrders = await User.findById(id).select('pastOrders')
+        let newPastOrder = pastOrders.map((orders) => ({
+            ...orders,
+            date: Date.now(),
+            showOrder: false,
+            prevOrder
+        }))
+
         try {
-            await User.findByIdAndUpdate(id, { cart: [] })
+            await User.findByIdAndUpdate(id, { $push: { pastOrders: newPastOrder, cart: [] } })
             return res.send('payment successful')
         }
         catch (err) { console.error(err) }

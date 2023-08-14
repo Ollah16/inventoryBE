@@ -4,13 +4,14 @@ const jwt = require('jsonwebtoken')
 const jwtSecretKey = process.env.JWTSECRETKEY
 
 const handle_Registration = async (req, res) => {
-    let { email, password, cart } = req.body
+    let { email, password, firstName, lastName, address, personalDetails, cart, pastOrders } = req.body
     let salt = await bcrypt.genSalt()
     let myPass = await bcrypt.hash(password, salt)
     let checkEmail = await User.findOne({ email })
+
     if (!checkEmail) {
         try {
-            let newUser = await User({ email, password: myPass, cart })
+            let newUser = await User({ email, password: myPass, firstName, lastName, address, personalDetails: { email, firstName, lastName }, pastOrders, cart })
             newUser.save()
             res.send('registration successful')
         }
@@ -110,5 +111,23 @@ const handleRemoveItem = async (req, res) => {
     }
 }
 
+const handleAddPDetails = async (req, res) => {
+    let { id } = req.userId
+    let { title, firstName, lastName, email, password, mobileNumber, alterNumber } = req.body
+    let foundUser = await User.findByIdAndUpdate(id, { personalDetails: { title, firstName, lastName, email, password, mobileNumber, alterNumber } })
+    let findUser = await User.findById(id)
+    let { personalDetails } = findUser
+    res.json({ personalDetails })
+}
 
-module.exports = { handle_Registration, handle_Login, handleUser_Cart, handleClearCart, handleRemoveItem, handle_CartItem }
+const handleAddAddress = async (req, res) => {
+    let { id } = req.userId
+    let { title, firstName, lastName, buildNum, buildname, flatNum, street, townStreet, county, addressNick } = req.body
+    let foundUser = await User.findByIdAndUpdate(id, { address: { title, firstName, lastName, buildNum, buildname, flatNum, street, townStreet, county, addressNick } })
+    let findUser = await User.findById(id)
+    let { address } = findUser
+    res.json({ address })
+}
+
+
+module.exports = { handle_Registration, handle_Login, handleUser_Cart, handleClearCart, handleRemoveItem, handle_CartItem, handleAddPDetails, handleAddAddress }
