@@ -116,14 +116,21 @@ const handleRemoveItem = async (req, res) => {
 
 const handleAddPDetails = async (req, res) => {
     let { id } = req.userId
-    let { title, firstName, lastName, email, password, mobileNumber, alterNumber } = req.body
-    try {
-        let foundUser = await User.findByIdAndUpdate(id, { title, email, firstName, lastName, mobileNumber, alterNumber })
-        let findUser = await User.findById(id)
-        let { title, email, firstName, lastName, mobileNumber, alterNumber } = findUser
-        res.json({ title, email, firstName, lastName, mobileNumber, alterNumber })
+    let { title, firstName, lastName, email, mobileNumber, alterNumber } = req.body
+
+    let checkPass = await User.findById(id)
+    let { password } = checkPass
+    let validatePassword = await bcrypt.compare(req.body.password, password)
+    if (validatePassword) {
+        try {
+            let foundUser = await User.findByIdAndUpdate(id, { title, email, firstName, lastName, mobileNumber, alterNumber })
+            let findUser = await User.findById(id)
+            let { title, email, firstName, lastName, mobileNumber, alterNumber } = findUser
+            res.json({ title, email, firstName, lastName, mobileNumber, alterNumber })
+        }
+        catch (err) { console.error(err) }
     }
-    catch (err) { console.error(err) }
+    else { res.send('incorrect password') }
 }
 
 const handleAddAddress = async (req, res) => {
@@ -173,6 +180,7 @@ const handle_Verify_Password = async (req, res) => {
     let valid = 'correct'
     let invalid = 'incorrect'
     let { existingPassword } = req.body
+    console.log(existingPassword)
     let { id } = req.userId
     let findUser = await User.findById(id)
     if (findUser) {
