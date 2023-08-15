@@ -4,10 +4,11 @@ const jwt = require('jsonwebtoken')
 const jwtSecretKey = process.env.JWTSECRETKEY
 
 const handle_Registration = async (req, res) => {
-    let { email, title, password, firstName, lastName, mobNumber, address, personalDetails, allOrders, cart } = req.body
+    let { email, title, password, firstName, lastName, mobNumber, address, allOrders, cart } = req.body
     let salt = await bcrypt.genSalt()
     let myPass = await bcrypt.hash(password, salt)
     let checkEmail = await User.findOne({ email })
+
     if (!checkEmail) {
         try {
             let newUser = await User({ email, title, password: myPass, firstName, lastName, mobNumber, address, allOrders, cart })
