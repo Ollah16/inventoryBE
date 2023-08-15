@@ -25,18 +25,20 @@ let userSchema = new Schema({
     lastName: String,
     mobNumber: Number,
     alterNumber: Number,
-    address: {
+    address: [{
         title: String,
         firstName: String,
         lastName: String,
         buildNum: Number,
-        buildname: Number,
+        buildname: String,
         flatNum: Number,
         street: String,
         townStreet: String,
         county: String,
-        addressNick: String
-    },
+        addressNick: String,
+        delInstruct: String,
+        edit: Boolean
+    }],
 
     cart: [{
         customerQuantity: Number,

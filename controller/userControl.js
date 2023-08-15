@@ -5,7 +5,7 @@ const jwtSecretKey = process.env.JWTSECRETKEY
 
 const handle_Registration = async (req, res) => {
     let allOrders = []
-    let address = {}
+    let address = []
     let cart = []
     let { email, title, password, firstName, lastName, mobNumber } = req.body
 
@@ -116,14 +116,15 @@ const handleRemoveItem = async (req, res) => {
 
 const handleAddPDetails = async (req, res) => {
     let { id } = req.userId
-    let { title, firstName, lastName, email, mobileNumber, alterNumber } = req.body
-
+    let { title, firstName, lastName, email, epassword, newPassword, mobNumber, alterNumber } = req.body
     let checkPass = await User.findById(id)
-    let { password } = checkPass
-    let validatePassword = await bcrypt.compare(req.body.password, password)
+    let validatePassword = await bcrypt.compare(epassword, checkPass.password)
     if (validatePassword) {
+        let salt = await bcrypt.genSalt()
+        let nPassword = await bcrypt.hash(newPassword, salt)
+        let updateArea = { title, email, firstName, password: nPassword, lastName, mobNumber, alterNumber }
         try {
-            let foundUser = await User.findByIdAndUpdate(id, { title, email, firstName, lastName, mobileNumber, alterNumber })
+            let foundUser = await User.findByIdAndUpdate(id, updateArea)
             let findUser = await User.findById(id)
             let { title, email, firstName, lastName, mobileNumber, alterNumber } = findUser
             res.json({ title, email, firstName, lastName, mobileNumber, alterNumber })
@@ -134,13 +135,43 @@ const handleAddPDetails = async (req, res) => {
 }
 
 const handleAddAddress = async (req, res) => {
-    let { id } = req.userId
-    let { title, firstName, lastName, buildNum, buildname, flatNum, street, townStreet, county, addressNick } = req.body
+    let userId = req.userId.id
+    let { data: { title, firstName, lastName, buildNum, buildname, flatNum, street, townStreet, county, addressNick, delInstruct, id } } = req.body
+    let updateArea = { title, firstName, lastName, buildNum, buildname, flatNum, street, townStreet, county, addressNick, delInstruct, edit: false }
     try {
-        let foundUser = await User.findByIdAndUpdate(id, { address: { title, firstName, lastName, buildNum, buildname, flatNum, street, townStreet, county, addressNick } })
-        let findUser = await User.findById(id)
+        let findUser = await User.findById(userId)
         let { address } = findUser
-        res.json({ address })
+        if (!id) {
+            let addNewAddress = [...address, updateArea]
+            await User.findByIdAndUpdate(userId, { address: addNewAddress })
+            let findAllAdress = await User.findById(userId)
+            return res.json({ address: findAllAdress.address })
+        }
+        else if (id) {
+            let newUpdate = address.map((addy) => addy._id == id ? ({
+                ...addy,
+                title: addy.title = title,
+                firstName: addy.firstName = firstName,
+                lastName: addy.lastName = lastName,
+                buildNum: addy.buildNum = buildNum,
+                buildname: addy.buildname = buildname,
+                flatNum: addy.flatNum = flatNum,
+                street: addy.street = street,
+                townStreet: addy.townStreet = townStreet,
+                county: addy.county = county,
+                addressNick: addy.addressNick = addressNick,
+                delInstruct: addy.delInstruct = delInstruct,
+                edit: addy.edit = false
+            }) : addy)
+
+            await User.findByIdAndUpdate(userId, {
+                address: newUpdate
+            })
+            let findAllAdress = await User.findById(userId)
+            console.log(findAllAdress.address)
+            return res.json({ address: findAllAdress.address })
+        }
+
     }
     catch (err) { console.error(err) }
 }
@@ -176,19 +207,57 @@ const handle_Fetch_Personal_Details = async (req, res) => {
     catch (err) { console.error(err) }
 }
 
-const handle_Verify_Password = async (req, res) => {
-    let valid = 'correct'
-    let invalid = 'incorrect'
-    let { existingPassword } = req.body
-    console.log(existingPassword)
+const handle_Address_Edit = async (req, res) => {
     let { id } = req.userId
-    let findUser = await User.findById(id)
-    if (findUser) {
-        let { password } = findUser
-        let comparePassword = await bcrypt.compare(existingPassword, password)
-        if (comparePassword) return res.json({ valid })
-        return res.json({ invalid })
+    let { addressId } = req.params
+    if (addressId != 'cancel') {
+        try {
+            let findUser = await User.findById(id)
+            let { address } = findUser
+            let updateAddress = address.map((addr) => addr._id == addressId ? ({
+                ...addr,
+                edit: addr.edit = true
+            }) : addr)
+            await User.findByIdAndUpdate(id, { address: updateAddress })
+
+            let newListAddress = await User.findById(id)
+            res.json({ address: newListAddress.address })
+        }
+        catch (err) { console.error(err) }
+        return
+    }
+
+    else if (addressId === 'cancel') {
+        try {
+            let findUser = await User.findById(id)
+            let { address } = findUser
+            let updateAddress = address.map((addr) => ({
+                ...addr,
+                edit: addr.edit = false
+            }))
+
+            await User.findByIdAndUpdate(id, { address: updateAddress })
+
+            let newListAddress = await User.findById(id)
+            res.json({ address: newListAddress.address })
+        }
+        catch (err) { console.error(err) }
+        return
     }
 }
 
-module.exports = { handle_Verify_Password, handle_Fetch_Address, handle_Fetch_Personal_Details, handle_Registration, handle_Login, handleUser_Cart, handleClearCart, handleRemoveItem, handle_CartItem, handleAddPDetails, handleAddAddress, handle_FetchAllOrders }
+const handle_Address_Delete = async (req, res) => {
+    let { id } = req.userId
+    let { addressId } = req.params
+    try {
+        let findUser = await User.findById(id)
+        let { address } = findUser
+        let updateAddress = address.filter((addy) => addy._id != addressId)
+        let confirmUpdate = await User.findByIdAndUpdate(id, { address: updateAddress })
+        let allNewAddress = await User.findById(id)
+        res.json({ address: allNewAddress.address })
+    }
+    catch (err) { console.error(err) }
+}
+
+module.exports = { handle_Address_Delete, handle_Address_Edit, handle_Fetch_Address, handle_Fetch_Personal_Details, handle_Registration, handle_Login, handleUser_Cart, handleClearCart, handleRemoveItem, handle_CartItem, handleAddPDetails, handleAddAddress, handle_FetchAllOrders }
