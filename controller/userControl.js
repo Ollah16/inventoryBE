@@ -115,7 +115,7 @@ const handleAddPDetails = async (req, res) => {
     let { id } = req.userId
     let { title, firstName, lastName, email, password, mobileNumber, alterNumber } = req.body
     try {
-        let foundUser = await User.findByIdAndUpdate(id, { personalDetails: { title, firstName, lastName, email, password, mobileNumber, alterNumber } })
+        let foundUser = await User.findByIdAndUpdate(id, { email: email, firstName: firstName, lastName: lastName, personalDetails: { title, firstName, lastName, email, password, mobileNumber, alterNumber } })
         let findUser = await User.findById(id)
         let { personalDetails } = findUser
         res.json({ personalDetails })
