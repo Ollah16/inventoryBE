@@ -159,8 +159,8 @@ const handle_Fetch_Personal_Details = async (req, res) => {
     let { id } = req.userId
     try {
         let foundUser = await User.findById(id)
-        let { email, firstName, lastName, mobNumber } = foundUser
-        res.json({ email, firstName, lastName, mobNumber })
+        let { title, email, firstName, lastName, mobNumber, alterNumber } = foundUser
+        res.json({ title, email, firstName, lastName, mobNumber, alterNumber })
     }
     catch (err) { console.error(err) }
 }
