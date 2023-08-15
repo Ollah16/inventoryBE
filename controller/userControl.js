@@ -4,14 +4,13 @@ const jwt = require('jsonwebtoken')
 const jwtSecretKey = process.env.JWTSECRETKEY
 
 const handle_Registration = async (req, res) => {
-    let { email, password, firstName, lastName, address, personalDetails, cart, allOrders } = req.body
+    let { email, title, password, firstName, lastName, mobNumber, address, personalDetails, allOrders, cart } = req.body
     let salt = await bcrypt.genSalt()
     let myPass = await bcrypt.hash(password, salt)
     let checkEmail = await User.findOne({ email })
-
     if (!checkEmail) {
         try {
-            let newUser = await User({ email, password: myPass, firstName, lastName, address, personalDetails: { email, firstName, lastName }, allOrders, cart })
+            let newUser = await User({ email, title, password: myPass, firstName, lastName, mobNumber, address, allOrders, cart })
             newUser.save()
             res.send('registration successful')
         }
@@ -115,10 +114,10 @@ const handleAddPDetails = async (req, res) => {
     let { id } = req.userId
     let { title, firstName, lastName, email, password, mobileNumber, alterNumber } = req.body
     try {
-        let foundUser = await User.findByIdAndUpdate(id, { email: email, firstName: firstName, lastName: lastName, personalDetails: { title, firstName, lastName, email, password, mobileNumber, alterNumber } })
+        let foundUser = await User.findByIdAndUpdate(id, { title, email, firstName, lastName, mobileNumber, alterNumber })
         let findUser = await User.findById(id)
-        let { personalDetails } = findUser
-        res.json({ personalDetails })
+        let { title, email, firstName, lastName, mobileNumber, alterNumber } = findUser
+        res.json({ title, email, firstName, lastName, mobileNumber, alterNumber })
     }
     catch (err) { console.error(err) }
 }
@@ -160,10 +159,24 @@ const handle_Fetch_Personal_Details = async (req, res) => {
     let { id } = req.userId
     try {
         let foundUser = await User.findById(id)
-        let { email, firstName, lastName } = foundUser
-        res.json({ email, firstName, lastName })
+        let { email, firstName, lastName, mobNumber } = foundUser
+        res.json({ email, firstName, lastName, mobNumber })
     }
     catch (err) { console.error(err) }
 }
 
-module.exports = { handle_Fetch_Address, handle_Fetch_Personal_Details, handle_Registration, handle_Login, handleUser_Cart, handleClearCart, handleRemoveItem, handle_CartItem, handleAddPDetails, handleAddAddress, handle_FetchAllOrders }
+const handle_Verify_Password = async (req, res) => {
+    let valid = 'correct'
+    let invalid = 'incorrect'
+    let { existingPassword } = req.body
+    let { id } = req.userId
+    let findUser = await User.findById(id)
+    if (findUser) {
+        let { password } = findUser
+        let comparePassword = await bcrypt.compare(existingPassword, password)
+        if (comparePassword) return res.json({ valid })
+        return res.json({ invalid })
+    }
+}
+
+module.exports = { handle_Verify_Password, handle_Fetch_Address, handle_Fetch_Personal_Details, handle_Registration, handle_Login, handleUser_Cart, handleClearCart, handleRemoveItem, handle_CartItem, handleAddPDetails, handleAddAddress, handle_FetchAllOrders }

@@ -18,10 +18,13 @@ let inventorySchema = new Schema({
 let Inventory = model('allGood', inventorySchema)
 
 let userSchema = new Schema({
+    title: String,
     email: String,
     password: String,
     firstName: String,
     lastName: String,
+    mobNumber: Number,
+    alterNumber: Number,
     address: {
         title: String,
         firstName: String,
@@ -34,15 +37,7 @@ let userSchema = new Schema({
         county: String,
         addressNick: String
     },
-    personalDetails: {
-        title: String,
-        firstName: String,
-        lastName: String,
-        email: String,
-        password: String,
-        mobileNumber: Number,
-        alterNumber: Number
-    },
+
     cart: [{
         customerQuantity: Number,
         itemId: {
