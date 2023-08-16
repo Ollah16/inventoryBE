@@ -105,7 +105,9 @@ const handleRemoveItem = async (req, res) => {
         let user = await User.findById(id)
         let { cart } = user
         let foundItem = cart.filter(item => item._id != itemId)
-        const updateResult = await User.findByIdAndUpdate(id, { cart: foundItem });
+        let updateResult = await User.findByIdAndUpdate(id, { cart: foundItem });
+        let newCart = await User.findById(id)
+        json.send({ newCart: newCart.cart })
 
     }
     catch (error) {
