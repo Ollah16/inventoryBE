@@ -106,5 +106,11 @@ const handle_CheckOut = async (req, res) => {
     return res.send('payment unsuccessful')
 }
 
+const handle_Search = async (req, res) => {
+    let { itemId } = req.params
+    let findItem = await Inventory.findOne({ item: itemId })
+    if (findItem) return res.json({ findItem })
+    return res.send('item not found')
+}
 
-module.exports = { handle_AddGoods, handle_AllItem, handle_Viewmore, handle_Done, handle_Edit, handle_Delete, handle_CheckOut }
+module.exports = { handle_Search, handle_AddGoods, handle_AllItem, handle_Viewmore, handle_Done, handle_Edit, handle_Delete, handle_CheckOut }
