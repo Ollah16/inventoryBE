@@ -111,7 +111,6 @@ const handle_Search = async (req, res) => {
     let searchItem = itemId.charAt(0).toUpperCase() + itemId.slice(1)
     try {
         let findItem = await Inventory.findOne({ item: searchItem })
-        console.log(findItem)
         if (findItem) return res.json({ findItem })
         return res.send('item not found')
     }
