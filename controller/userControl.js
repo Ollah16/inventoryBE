@@ -35,7 +35,7 @@ const handle_Login = async (req, res) => {
         if (checkPass) {
             let { id } = checkEmail
             let myAccessToken = await jwt.sign({ id }, jwtSecretKey)
-            return res.json({ id, myAccessToken })
+            return res.json({ myAccessToken })
         }
 
         return res.send('That email or password doesn’t look right. Please try again')
