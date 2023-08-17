@@ -3,7 +3,7 @@ const express = require("express")
 // var path = require('path');
 const app = express()
 const cors = require("cors")
-app.use(cors({ origin: 'https://inventory-be-seven.vercel.app' }))
+app.use(cors())
 app.use(express.urlencoded({ extended: true }))
 const inventory = require("./routes/inventoryRoute")
 const user = require("./routes/userRoute")
