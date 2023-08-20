@@ -65,7 +65,7 @@ const handle_CartItem = async (req, res) => {
 
         if (ifExist) {
             try {
-                let updateCart = cart.map(item => item._id == id ?
+                let updateCart = cart.map(item => item._id == itemId ?
                     ({
                         ...item,
                         customerQuantity: type === 'add' ? item.customerQuantity += 1 :
