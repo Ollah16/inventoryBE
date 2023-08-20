@@ -55,20 +55,22 @@ const handleUser_Cart = async (req, res) => {
 
 const handle_CartItem = async (req, res) => {
     let { id } = req.userId
-    let { quantity, customerQuantity, _id, item, price, image } = req.body
+    let { itemId } = req.params
+    let { type } = req.body
     let user = await User.findById(id)
     let { cart } = user
-    let newCartItem = { quantity, customerQuantity, _id, item, price, image }
 
     if (user) {
-        let ifExist = user.cart.some((good) => good._id == _id)
+        let ifExist = cart.find((good) => good._id == itemId)
 
         if (ifExist) {
             try {
-                let updateCart = cart.map(item => item._id == _id ?
+                let updateCart = cart.map(item => item._id == id ?
                     ({
                         ...item,
-                        customerQuantity: item.customerQuantity = customerQuantity
+                        customerQuantity: type === 'add' ? item.customerQuantity += 1 :
+                            type === 'subtract' ? item.customerQuantity -= 1 :
+                                item.customerQuantity
                     })
                     : item)
 
