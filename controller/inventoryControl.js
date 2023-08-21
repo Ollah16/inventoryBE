@@ -43,9 +43,9 @@ const handle_Edit = async (req, res) => {
 const handle_Done = async (req, res) => {
     let { itemId } = req.params
     let { item, price, detail, quantity } = req.body
-    if (item && req.file.filename) {
+    if (item) {
         try {
-            let updateArea = { item, price, detail, quantity, image: req.file.filename }
+            let updateArea = { item, price, detail, quantity }
             let findItem = await Inventory.findByIdAndUpdate(itemId, { ...updateArea, itemEdit: true })
         }
         catch (err) { console.error(err) }
