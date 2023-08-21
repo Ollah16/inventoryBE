@@ -1,4 +1,4 @@
-const { User } = require('../models/inventoryModel')
+const { User, Inventory } = require('../models/inventoryModel')
 const bcrypt = require('bcrypt')
 const jwt = require('jsonwebtoken')
 const jwtSecretKey = process.env.JWTSECRETKEY
@@ -56,39 +56,46 @@ const handleUser_Cart = async (req, res) => {
 const handle_CartItem = async (req, res) => {
     let { id } = req.userId
     let { itemId } = req.params
-    let { type } = req.body
+    let { newCustomerQuantity } = req.body
     let user = await User.findById(id)
     let { cart } = user
 
-    if (user) {
-        let ifExist = cart.find((good) => good._id == itemId)
-
-        if (ifExist) {
-            try {
-                let updateCart = cart.map(item => item._id == itemId ?
-                    ({
-                        ...item,
-                        customerQuantity: type === 'add' ? item.customerQuantity += 1 :
-                            type === 'subtract' ? item.customerQuantity -= 1 :
-                                item.customerQuantity
-                    })
-                    : item)
-
-                await User.findByIdAndUpdate(id, { cart: updateCart })
-            }
-            catch (err) { console.log(err) }
-        }
-
-        else {
-            try {
-                let updateArea = { $push: { cart: newCartItem } };
-                let updateCart = await User.findByIdAndUpdate(id, updateArea);
-            }
-            catch (err) { console.log(err) }
+    let ifExist = cart.find((good) => good._id == itemId);
+    if (ifExist) {
+        try {
+            let updateCart = cart.map(item => item._id == itemId
+                ? ({
+                    ...item,
+                    customerQuantity: item.customerQuantity = newCustomerQuantity
+                })
+                : item
+            );
+            await User.findByIdAndUpdate(id, { cart: updateCart });
+        } catch (err) {
+            console.log(err);
         }
     }
 
+    else if (!ifExist) {
+        try {
+            let findItem = await Inventory.findById(itemId);
+            let { customerQuantity, item, price, image, _id } = findItem;
+            let newItem = {
+                customerQuantity: newCustomerQuantity,
+                item,
+                price,
+                image,
+                _id
+            };
+            let updatedCart = [...cart, newItem];
+            await User.findByIdAndUpdate(id, { cart: updatedCart });
+        }
+        catch (err) {
+            console.error(err);
+        }
+    }
 }
+
 
 const handleClearCart = async (req, res) => {
     let { id } = req.userId
