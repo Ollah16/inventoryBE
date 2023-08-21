@@ -61,31 +61,7 @@ const handle_CartItem = async (req, res) => {
     let { cart } = user
     let ifExist = cart.find((good) => good._id == itemId);
 
-    if (req.body.type === 'cancel') {
-        try {
-            let updateCart = cart.filter(item => item._id != itemId)
-            await User.findByIdAndUpdate(id, { cart: updateCart });
-        } catch (err) {
-            console.log(err);
-        }
-    }
-
-    else if (req.body.type === 'addItem') {
-        try {
-            let updateCart = cart.map(item => item._id == itemId
-                ? ({
-                    ...item,
-                    customerQuantity: item.customerQuantity = 1
-                })
-                : item
-            );
-            await User.findByIdAndUpdate(id, { cart: updateCart });
-        } catch (err) {
-            console.log(err);
-        }
-    }
-
-    else if (ifExist && !req.body.type) {
+    if (ifExist) {
         try {
             let updateCart = cart.map(item => item._id == itemId
                 ? ({
@@ -94,13 +70,16 @@ const handle_CartItem = async (req, res) => {
                 })
                 : item
             );
+
+            updateCart.filter(item => item.customerQuantity != 0)
+
             await User.findByIdAndUpdate(id, { cart: updateCart });
         } catch (err) {
             console.log(err);
         }
     }
 
-    else if (!ifExist && !req.body.type) {
+    else if (!ifExist) {
         try {
             let findItem = await Inventory.findById(itemId);
             let { customerQuantity, item, price, image, _id } = findItem;
