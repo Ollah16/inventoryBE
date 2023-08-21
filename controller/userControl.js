@@ -61,6 +61,21 @@ const handle_CartItem = async (req, res) => {
     let { cart } = user
 
     let ifExist = cart.find((good) => good._id == itemId);
+    if (req.body.type) {
+        try {
+            let updateCart = cart.map(item => item._id == itemId
+                ? ({
+                    ...item,
+                    customerQuantity: item.customerQuantity = 0
+                })
+                : item
+            );
+            await User.findByIdAndUpdate(id, { cart: updateCart });
+        } catch (err) {
+            console.log(err);
+        }
+    }
+
     if (ifExist) {
         try {
             let updateCart = cart.map(item => item._id == itemId
