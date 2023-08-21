@@ -71,7 +71,7 @@ const handle_CartItem = async (req, res) => {
                 : item
             );
 
-            updateCart = updateCart.filter(item => item.customerQuantity !== 0)
+            updateCart = updateCart.filter(item => item.customerQuantity >= 1)
             await User.findByIdAndUpdate(id, { cart: updateCart });
         } catch (err) {
             console.log(err);
