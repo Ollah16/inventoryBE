@@ -62,6 +62,7 @@ const handle_CartItem = async (req, res) => {
 
     let ifExist = cart.find((good) => good._id == itemId);
     if (req.body.type) {
+        console.log('hitype')
         try {
             let updateCart = cart.map(item => item._id == itemId
                 ? ({
@@ -76,7 +77,9 @@ const handle_CartItem = async (req, res) => {
         }
     }
 
-    if (ifExist) {
+    if (ifExist && !req.body.type) {
+        console.log('hitypeNot')
+
         try {
             let updateCart = cart.map(item => item._id == itemId
                 ? ({
@@ -91,7 +94,8 @@ const handle_CartItem = async (req, res) => {
         }
     }
 
-    else if (!ifExist) {
+    else if (!ifExist && !req.body.type) {
+        console.log('hitypeNot')
         try {
             let findItem = await Inventory.findById(itemId);
             let { customerQuantity, item, price, image, _id } = findItem;
