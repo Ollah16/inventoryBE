@@ -7,6 +7,7 @@ const handle_Registration = async (req, res) => {
     let allOrders = []
     let address = []
     let cart = []
+
     let { email, title, password, firstName, lastName, mobNumber } = req.body
 
     let salt = await bcrypt.genSalt()
@@ -24,14 +25,13 @@ const handle_Registration = async (req, res) => {
         res.send('user already exist')
     }
 
-
 }
 
 const handle_Login = async (req, res) => {
     let { email, password } = req.body
     let checkEmail = await User.findOne({ email })
     if (checkEmail) {
-        checkPass = await bcrypt.compare(password, checkEmail.password)
+        let checkPass = await bcrypt.compare(password, checkEmail.password)
         if (checkPass) {
             let { id } = checkEmail
             let myAccessToken = await jwt.sign({ id }, jwtSecretKey)
