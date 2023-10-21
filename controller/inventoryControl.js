@@ -76,7 +76,7 @@ const handleSaveChanges = async (req, res) => {
 const handleCancelChanges = async (req, res) => {
     const { itemId } = req.params;
     try {
-        await Inventory.findByIdAndUpdate(itemId, { itemEdit: false });
+        await Inventory.findByIdAndUpdate(itemId, { itemEdit: true });
         res.status(200).json({ message: 'Item updated successfully' });
     } catch (error) {
         console.error('Error updating item:', error);
