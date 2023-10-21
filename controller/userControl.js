@@ -3,274 +3,382 @@ const bcrypt = require('bcrypt')
 const jwt = require('jsonwebtoken')
 const jwtSecretKey = process.env.JWTSECRETKEY
 
-const handle_Registration = async (req, res) => {
-    let allOrders = []
-    let address = []
-    let cart = []
+const handleRegistration = async (req, res) => {
+    try {
+        const { email, title, password, firstName, lastName, mobNumber } = req.body;
 
-    let { email, title, password, firstName, lastName, mobNumber } = req.body
+        const salt = await bcrypt.genSalt();
+        const hashedPassword = await bcrypt.hash(password, salt);
 
-    let salt = await bcrypt.genSalt()
-    let myPass = await bcrypt.hash(password, salt)
-    let checkEmail = await User.findOne({ email })
-    if (!checkEmail) {
-        try {
-            let newUser = await User({ email, title, password: myPass, firstName, lastName, mobNumber, address, allOrders, cart })
-            newUser.save()
-            res.send('registration successful')
+        const checkEmail = await User.findOne({ email });
+
+        if (!checkEmail) {
+            const newUser = new User({
+                email,
+                title,
+                password: hashedPassword,
+                firstName,
+                lastName,
+                mobNumber,
+                address: [],
+                allOrders: [],
+                cart: [],
+            });
+
+            await newUser.save();
+
+            res.send('Registration successful');
+        } else {
+            res.send('User already exists');
         }
-        catch (err) { console.error(err) }
+    } catch (err) {
+        console.error(err);
+        res.status(500).send('Registration failed');
     }
-    else {
-        res.send('user already exist')
-    }
+};
 
-}
+const handleLogin = async (req, res) => {
+    try {
+        const { email, password } = req.body;
+        const user = await User.findOne({ email });
 
-const handle_Login = async (req, res) => {
-    let { email, password } = req.body
-    let checkEmail = await User.findOne({ email })
-    if (checkEmail) {
-        let checkPass = await bcrypt.compare(password, checkEmail.password)
-        if (checkPass) {
-            let { id } = checkEmail
-            let myAccessToken = await jwt.sign({ id }, jwtSecretKey)
-            return res.json({ myAccessToken })
+        if (user) {
+            const isPasswordValid = await bcrypt.compare(password, user.password);
+
+            if (isPasswordValid) {
+                const { id } = user;
+                const accessToken = jwt.sign({ id }, jwtSecretKey);
+
+                return res.json({ accessToken });
+            } else {
+                return res.status(401).send('Invalid email or password. Please try again.');
+            }
+        } else {
+            return res.status(401).send('Invalid email or password. Please try again.');
         }
-
-        return res.send('That email or password doesn’t look right. Please try again')
-
+    } catch (err) {
+        console.error(err);
+        res.status(500).send('Login failed');
     }
-    return res.send('That email or password doesn’t look right. Please try again')
-}
+};
 
-const handleUser_Cart = async (req, res) => {
-    let { id } = req.userId
-    let userCart = await User.findById(id)
-    if (userCart) {
-        let { cart } = userCart
-        res.json({ cart })
+const handleUserCart = async (req, res) => {
+    try {
+        const { id } = req.userId;
+        const userCart = await User.findById(id);
+
+        if (userCart) {
+            const { cart } = userCart;
+            return res.json({ cart });
+        } else {
+            return res.status(404).json({ message: 'User not found' });
+        }
+    } catch (err) {
+        console.error(err);
+        return res.status(500).send('Error fetching user cart');
     }
-}
+};
 
-const handle_CartItem = async (req, res) => {
-    let { id } = req.userId
-    let { itemId } = req.params
-    let { newCustomerQuantity } = req.body
-    let user = await User.findById(id)
-    let { cart } = user
-    let ifExist = cart.find((good) => good._id == itemId);
+const handleCartItem = async (req, res) => {
+    try {
+        const { id } = req.userId;
+        const { itemId } = req.params;
+        const { newCustomerQuantity } = req.body;
+        const user = await User.findById(id);
+        const { cart } = user;
+        const ifExist = cart.find((good) => good.id == itemId);
 
-    if (ifExist) {
-        try {
-            let updateCart = cart.map(item => item._id == itemId
-                ? ({
-                    ...item,
-                    customerQuantity: item.customerQuantity = newCustomerQuantity
-                })
-                : item
+        if (ifExist) {
+            const updateCart = cart.map((item) =>
+                item.id == itemId
+                    ? {
+                        ...item,
+                        customerQuantity: newCustomerQuantity,
+                    }
+                    : item
             );
 
-            updateCart = updateCart.filter(item => item.customerQuantity >= 1)
-            await User.findByIdAndUpdate(id, { cart: updateCart });
-        } catch (err) {
-            console.log(err);
-        }
-    }
-
-    else if (!ifExist) {
-        try {
-            let findItem = await Inventory.findById(itemId);
-            let { customerQuantity, item, price, image, _id } = findItem;
-            let newItem = {
+            const updatedCart = updateCart.filter((item) => item.customerQuantity >= 1);
+            await User.findByIdAndUpdate(id, { cart: updatedCart });
+        } else if (!ifExist) {
+            const findItem = await Inventory.findById(itemId);
+            const { customerQuantity, item, price, image, id } = findItem;
+            const newItem = {
                 customerQuantity: newCustomerQuantity,
                 item,
                 price,
                 image,
-                _id
+                id,
             };
-            let updatedCart = [...cart, newItem];
+            const updatedCart = [...cart, newItem];
             await User.findByIdAndUpdate(id, { cart: updatedCart });
         }
-        catch (err) {
-            console.error(err);
-        }
-    }
-}
 
+        res.status(200).json({ message: 'Cart item updated successfully' });
+    } catch (err) {
+        console.error(err);
+        res.status(500).send('Error updating cart item');
+    }
+};
 
 const handleClearCart = async (req, res) => {
-    let { id } = req.userId
     try {
-        let updateCart = await User.findByIdAndUpdate(id, { cart: [] })
+        const { id } = req.userId;
+        const clearCart = await User.findByIdAndUpdate(id, { cart: [] });
+
+        if (clearCart) {
+            return res.status(200).json({ message: 'Cart cleared successfully.' });
+        } else {
+            return res.status(404).json({ message: 'User not found.' });
+        }
+    } catch (err) {
+        console.error(err);
+        return res.status(500).json({ message: 'An error occurred while clearing the cart.' });
     }
-    catch (err) { console.log(err) }
-}
+};
+
 
 const handleRemoveItem = async (req, res) => {
-
     try {
         const { itemId } = req.params;
         const { id } = req.userId;
+        const user = await User.findById(id);
 
-        let user = await User.findById(id)
-        let { cart } = user
-        let foundItem = cart.filter(item => item._id != itemId)
-        let updateResult = await User.findByIdAndUpdate(id, { cart: foundItem });
-        let newCart = await User.findById(id)
-        json.send({ newCart: newCart.cart })
+        if (!user) {
+            return res.status(404).json({ message: 'User not found.' });
+        }
+        const { cart } = user;
+        const updatedCart = cart.filter(item => item.id !== itemId);
 
-    }
-    catch (error) {
+        await User.findByIdAndUpdate(id, { cart: updatedCart });
+        const updatedUserCart = await User.findById(id);
+
+        if (!updatedUserCart) {
+            return res.status(500).json({ message: 'Failed to update user cart.' });
+        }
+
+        return res.status(200).json({ newCart: updatedUserCart.cart });
+    } catch (error) {
         console.error('Error removing item from cart:', error);
         res.status(500).send('Internal Server Error');
     }
-}
+};
 
-const handleAddPDetails = async (req, res) => {
-    let { id } = req.userId
-    let { title, firstName, lastName, email, epassword, newPassword, mobNumber, alterNumber } = req.body
-    let checkPass = await User.findById(id)
-    let validatePassword = await bcrypt.compare(epassword, checkPass.password)
-    if (validatePassword) {
-        let salt = await bcrypt.genSalt()
-        let nPassword = await bcrypt.hash(newPassword, salt)
-        let updateArea = { title, email, firstName, password: nPassword, lastName, mobNumber, alterNumber }
-        try {
-            let foundUser = await User.findByIdAndUpdate(id, updateArea)
-            let findUser = await User.findById(id)
-            let { title, email, firstName, lastName, mobileNumber, alterNumber } = findUser
-            res.json({ title, email, firstName, lastName, mobileNumber, alterNumber })
+
+const addPersonalDetails = async (req, res) => {
+    try {
+        const { id } = req.userId;
+        const {
+            title, firstName, lastName, email, epassword, newPassword, mobNumber, alterNumber
+        } = req.body;
+
+        const user = await User.findById(id);
+        if (!user) return res.status(404).json({ message: 'User not found.' });
+        const validatePassword = await bcrypt.compare(epassword, user.password);
+        if (!validatePassword) return res.status(401).json({ message: 'Incorrect password.' });
+        const salt = await bcrypt.genSalt();
+        const hashedPassword = await bcrypt.hash(newPassword, salt);
+        const updateArea = {
+            title, email, firstName, password: hashedPassword, lastName, mobNumber, alterNumber
+        };
+        await User.findByIdAndUpdate(id, updateArea);
+        const findUser = await User.findById(id);
+        if (findUser) {
+            const { title, email, firstName, lastName, mobileNumber, alterNumber } = findUser;
+            res.status(200).json({ title, email, firstName, lastName, mobileNumber, alterNumber });
         }
-        catch (err) { console.error(err) }
+    } catch (err) {
+        console.error(err);
+        return res.status(500).json({ message: 'An error occurred while processing the request.' });
     }
-    else { res.send('incorrect password') }
-}
+};
 
 const handleAddAddress = async (req, res) => {
-    let userId = req.userId.id
-    let { data: { title, firstName, lastName, buildNum, buildname, flatNum, street, townStreet, county, addressNick, delInstruct, id } } = req.body
-    let updateArea = { title, firstName, lastName, buildNum, buildname, flatNum, street, townStreet, county, addressNick, delInstruct, edit: false }
+    const userId = req.userId.id;
+
     try {
-        let findUser = await User.findById(userId)
-        let { address } = findUser
+        const {
+            data: {
+                title,
+                firstName,
+                lastName,
+                buildNum,
+                buildname,
+                flatNum,
+                street,
+                townStreet,
+                county,
+                addressNick,
+                delInstruct,
+                id,
+            },
+        } = req.body;
+
+        const updateArea = {
+            title,
+            firstName,
+            lastName,
+            buildNum,
+            buildname,
+            flatNum,
+            street,
+            townStreet,
+            county,
+            addressNick,
+            delInstruct,
+            edit: false,
+        };
+
+        const user = await User.findById(userId);
+        if (!user) {
+            return res.status(404).json({ message: 'User not found.' });
+        }
+        const { address } = user;
         if (!id) {
-            let addNewAddress = [...address, updateArea]
-            await User.findByIdAndUpdate(userId, { address: addNewAddress })
-            let findAllAdress = await User.findById(userId)
-            return res.json({ address: findAllAdress.address })
+            const addNewAddress = [...address, updateArea];
+            await User.findByIdAndUpdate(userId, { address: addNewAddress });
+
+            const allAddress = await User.findById(userId);
+            return res.status(200).json({ address: allAddress.address });
+        } else if (id) {
+            const updateAddress = address.map((addy) =>
+                addy.id === id
+                    ? {
+                        ...addy,
+                        title,
+                        firstName,
+                        lastName,
+                        buildNum,
+                        buildname,
+                        flatNum,
+                        street,
+                        townStreet,
+                        county,
+                        addressNick,
+                        delInstruct,
+                        edit: false,
+                    }
+                    : addy
+            );
+
+            await User.findByIdAndUpdate(userId, { address: updateAddress });
+
+            const allAddress = await User.findById(userId);
+            return res.status(200).json({ address: allAddress.address });
         }
-        else if (id) {
-            let newUpdate = address.map((addy) => addy._id == id ? ({
-                ...addy,
-                title: addy.title = title,
-                firstName: addy.firstName = firstName,
-                lastName: addy.lastName = lastName,
-                buildNum: addy.buildNum = buildNum,
-                buildname: addy.buildname = buildname,
-                flatNum: addy.flatNum = flatNum,
-                street: addy.street = street,
-                townStreet: addy.townStreet = townStreet,
-                county: addy.county = county,
-                addressNick: addy.addressNick = addressNick,
-                delInstruct: addy.delInstruct = delInstruct,
-                edit: addy.edit = false
-            }) : addy)
+    } catch (error) {
+        console.error('Error adding/updating address:', error);
+        res.status(500).send('Internal Server Error');
+    }
+};
 
-            await User.findByIdAndUpdate(userId, {
-                address: newUpdate
-            })
-            let findAllAdress = await User.findById(userId)
-            console.log(findAllAdress.address)
-            return res.json({ address: findAllAdress.address })
+const handleFetchAllOrders = async (req, res) => {
+    const userId = req.userId.id;
+    try {
+        const user = await User.findById(userId);
+
+        if (!user) {
+            return res.status(404).json({ message: 'User not found.' });
+        }
+        const { allOrders } = user;
+        return res.status(200).json({ allOrders });
+    } catch (error) {
+        console.error('Error fetching all orders:', error);
+        res.status(500).send('Internal Server Error');
+    }
+};
+
+const handleFetchAddress = async (req, res) => {
+    const userId = req.userId.id;
+
+    try {
+        const user = await User.findById(userId);
+
+        if (!user) {
+            return res.status(404).json({ message: 'User not found.' });
+        }
+        const { address } = user;
+        return res.status(200).json({ address });
+    } catch (error) {
+        console.error('Error fetching user address:', error);
+        res.status(500).send('Internal Server Error');
+    }
+};
+
+const handleFetchPersonalDetails = async (req, res) => {
+    const userId = req.userId.id;
+    try {
+        const user = await User.findById(userId);
+
+        if (!user) {
+            return res.status(404).json({ message: 'User not found.' });
         }
 
+        return res.status(200).json({ user });
+    } catch (error) {
+        console.error('Error fetching user personal details:', error);
+        res.status(500).send('Internal Server Error');
     }
-    catch (err) { console.error(err) }
-}
+};
 
-const handle_FetchAllOrders = async (req, res) => {
-    let { id } = req.userId
+const handleAddressEdit = async (req, res) => {
+    const { id } = req.userId;
+    const { addressId } = req.params;
+
     try {
-        let pastOrders = await User.findById(id)
-        let { allOrders } = pastOrders
-        res.json({ allOrders })
-    }
-    catch (err) { console.err(err) }
+        let user = await User.findById(id);
+        const { address } = user;
 
-}
-
-const handle_Fetch_Address = async (req, res) => {
-    let { id } = req.userId
-    try {
-        let foundUser = await User.findById(id)
-        let { address } = foundUser
-        res.json({ address })
-    }
-    catch (err) { console.error(err) }
-}
-
-const handle_Fetch_Personal_Details = async (req, res) => {
-    let { id } = req.userId
-    try {
-        let foundUser = await User.findById(id)
-        let { title, email, firstName, lastName, mobNumber, alterNumber } = foundUser
-        res.json({ title, email, firstName, lastName, mobNumber, alterNumber })
-    }
-    catch (err) { console.error(err) }
-}
-
-const handle_Address_Edit = async (req, res) => {
-    let { id } = req.userId
-    let { addressId } = req.params
-    if (addressId != 'cancel') {
-        try {
-            let findUser = await User.findById(id)
-            let { address } = findUser
-            let updateAddress = address.map((addr) => addr._id == addressId ? ({
-                ...addr,
-                edit: addr.edit = true
-            }) : addr)
-            await User.findByIdAndUpdate(id, { address: updateAddress })
-
-            let newListAddress = await User.findById(id)
-            res.json({ address: newListAddress.address })
+        if (addressId !== 'cancel') {
+            const updateAddress = address.map((addr) =>
+                addr.id == addressId ? { ...addr, edit: true } : addr
+            );
+            await User.findByIdAndUpdate(id, { address: updateAddress });
+        } else {
+            const updateAddress = address.map((addr) => ({ ...addr, edit: false }));
+            await User.findByIdAndUpdate(id, { address: updateAddress });
         }
-        catch (err) { console.error(err) }
-        return
+        const newAddress = await User.findById(id);
+        return res.json({ address: newAddress.address });
+    } catch (error) {
+        console.error('Error editing user address:', error);
+        return res.status(500).send('Internal Server Error');
     }
+};
 
-    else if (addressId === 'cancel') {
-        try {
-            let findUser = await User.findById(id)
-            let { address } = findUser
-            let updateAddress = address.map((addr) => ({
-                ...addr,
-                edit: addr.edit = false
-            }))
-
-            await User.findByIdAndUpdate(id, { address: updateAddress })
-
-            let newListAddress = await User.findById(id)
-            res.json({ address: newListAddress.address })
-        }
-        catch (err) { console.error(err) }
-        return
-    }
-}
-
-const handle_Address_Delete = async (req, res) => {
-    let { id } = req.userId
-    let { addressId } = req.params
+const handleAddressDelete = async (req, res) => {
     try {
-        let findUser = await User.findById(id)
-        let { address } = findUser
-        let updateAddress = address.filter((addy) => addy._id != addressId)
-        let confirmUpdate = await User.findByIdAndUpdate(id, { address: updateAddress })
-        let allNewAddress = await User.findById(id)
-        res.json({ address: allNewAddress.address })
-    }
-    catch (err) { console.error(err) }
-}
+        const { id } = req.userId;
+        const { addressId } = req.params;
 
-module.exports = { handle_Address_Delete, handle_Address_Edit, handle_Fetch_Address, handle_Fetch_Personal_Details, handle_Registration, handle_Login, handleUser_Cart, handleClearCart, handleRemoveItem, handle_CartItem, handleAddPDetails, handleAddAddress, handle_FetchAllOrders }
+        const user = await User.findById(id);
+        const { address } = user;
+
+        const updateAddress = address.filter((addy) => addy.id != addressId);
+
+        await User.findByIdAndUpdate(id, { address: updateAddress });
+
+        const newAddress = await User.findById(id);
+
+        res.json({ address: newAddress.address });
+    } catch (error) {
+        console.error('Error deleting user address:', error);
+        res.status(500).send('Internal Server Error');
+    }
+};
+
+module.exports = {
+    handleAddressDelete,
+    handleAddressEdit,
+    handleFetchAddress,
+    handleFetchPersonalDetails,
+    handleRegistration,
+    handleLogin,
+    handleUserCart,
+    handleClearCart,
+    handleRemoveItem,
+    handleCartItem,
+    addPersonalDetails,
+    handleAddAddress,
+    handleFetchAllOrders
+}

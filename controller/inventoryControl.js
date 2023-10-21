@@ -1,78 +1,110 @@
-const { Inventory, User } = require("../models/inventoryModel")
+const { Inventory, User } = require("../models/inventoryModel");
+const { handleS3Upload } = require("../s3Service");
 
-const handle_AddGoods = async (req, res) => {
-    let { item, quantity, price, detail, itemEdit, addItem, customerQuantity } = req.body
-    if (req.error) {
-        res.send(req.error.message)
-    }
-    else {
-        try {
-            let allGoods = Inventory({ item, quantity, image: req.file.filename, price, detail, itemEdit, addItem, customerQuantity })
-            allGoods.save()
+exports.handleAddGoods = async (req, res) => {
+    try {
+        const { item, quantity, price, detail, itemEdit, addItem, customerQuantity } = req.body;
+        if (req.error) {
+            return res.send(req.error.message);
         }
-        catch (err) { console.error(err) }
+        await handleS3Upload(req.file)
+        console.log(req)
+        const allGoods = Inventory({
+            item,
+            quantity,
+            image: req.originalname,
+            price,
+            detail,
+            itemEdit,
+            addItem,
+            customerQuantity,
+        });
+
+        await allGoods.save();
+        res.send('Goods added successfully');
+    } catch (error) {
+        console.error('Error adding goods:', error);
+        res.status(500).send('Internal Server Error');
     }
+};
 
-}
-
-const handle_AllItem = async (req, res) => {
+exports.handleGetGoods = async (req, res) => {
     try {
-        let allGoods = await Inventory.find({})
-        res.json({ allGoods })
+        const allGoods = await Inventory.find({});
+        res.json({ allGoods });
+    } catch (error) {
+        console.error('Error retrieving all items:', error);
+        res.status(500).send('Internal Server Error');
     }
-    catch (err) { console.err(err) }
-}
+};
 
-const handle_Viewmore = async (req, res) => {
-    let { itemId } = req.params
+exports.handleViewMore = async (req, res) => {
     try {
-        let viewed = await Inventory.findById(itemId)
-        res.json({ viewed })
+        const { itemId } = req.params;
+        const viewedItem = await Inventory.findById(itemId);
+        res.json({ viewedItem });
+    } catch (error) {
+        console.error('Error viewing item details:', error);
+        res.status(500).send('Internal Server Error');
     }
-    catch (err) { console.error(err) }
-}
+};
 
-const handle_Edit = async (req, res) => {
+exports.handleEditItem = async (req, res) => {
     try {
-        let { itemId } = req.params
-        let findItem = await Inventory.findByIdAndUpdate(itemId, { itemEdit: false })
+        const { itemId } = req.params;
+        await Inventory.findByIdAndUpdate(itemId, { itemEdit: false });
+        res.status(200).json({ message: 'Item edited successfully' });
+    } catch (error) {
+        console.error('Error editing item:', error);
+        res.status(500).send('Internal Server Error');
     }
-    catch (err) { console.error(err) }
-}
+};
 
-const handle_Done = async (req, res) => {
-    let { itemId } = req.params
-    let { item, price, detail, quantity } = req.body
-    if (item) {
-        try {
-            let updateArea = { item, price, detail, quantity }
-            let findItem = await Inventory.findByIdAndUpdate(itemId, { ...updateArea, itemEdit: true })
-        }
-        catch (err) { console.error(err) }
-    }
-    else {
-        try {
-            let findItem = await Inventory.findByIdAndUpdate(itemId, { itemEdit: true })
-        }
-        catch (err) { console.error(err) }
-    }
+exports.handleSaveChanges = async (req, res) => {
+    const { itemId } = req.params;
+    const { item, price, detail, quantity } = req.body;
+    await handleS3Upload(req.file)
 
-}
-
-const handle_Delete = async (req, res) => {
-    let { itemId } = req.params
     try {
-        let deleteItem = await Inventory.findByIdAndRemove(itemId)
+        const updateArea = { item, price, detail, quantity, image: req.originalname };
+        await Inventory.findByIdAndUpdate(itemId, { ...updateArea, itemEdit: true });
+        res.status(200).json({ message: 'Item updated successfully' });
+    } catch (error) {
+        console.error('Error updating item:', error);
+        res.status(500).send('Internal Server Error');
     }
-    catch (err) { console.error(err) }
-}
+};
 
-const handle_CheckOut = async (req, res) => {
-    let { id } = req.userId
-    let findUser = await User.findById(id)
-    let { cart } = findUser
+exports.handleCancelChanges = async (req, res) => {
+    const { itemId } = req.params;
+
+    try {
+        await Inventory.findByIdAndUpdate(itemId, { itemEdit: false });
+        res.status(200).json({ message: 'Item updated successfully' });
+    } catch (error) {
+        console.error('Error updating item:', error);
+        res.status(500).send('Internal Server Error');
+    }
+};
+
+exports.handleDeleteItem = async (req, res) => {
+    const { itemId } = req.params;
+    try {
+        await Inventory.findByIdAndRemove(itemId);
+        res.status(200).send({ message: 'Item deleted successfully' });
+    } catch (error) {
+        console.error('Error deleting item:', error);
+        res.status(500).send('Internal Server Error');
+    }
+};
+
+exports.handleCheckout = async (req, res) => {
+    const { userId } = req;
+    const { id } = userId;
+    const user = await User.findById(id);
+    const { cart } = user;
     let updatedInventory;
-    const currentDate = new Date()
+    const currentDate = new Date();
     const year = currentDate.getFullYear();
     const month = currentDate.getMonth() + 1;
     const day = currentDate.getDate();
@@ -83,38 +115,45 @@ const handle_CheckOut = async (req, res) => {
     try {
         for (const cartItem of cart) {
             const inventoryItemId = cartItem._id;
-            const newQuantity = cartItem.quantity - cartItem.customerQuantity;
-            let itemQuantity = await Inventory.findById(inventoryItemId).select('quantity')
-            let { quantity } = itemQuantity
-            quantity -= cartItem.customerQuantity
-            updatedInventory = await Inventory.findByIdAndUpdate(inventoryItemId, { quantity: quantity })
+            const itemQuantity = await Inventory.findById(inventoryItemId).select('quantity');
+            const { quantity } = itemQuantity;
+            quantity -= cartItem.customerQuantity;
+            updatedInventory = await Inventory.findByIdAndUpdate(inventoryItemId, { quantity: quantity });
         }
+    } catch (err) {
+        console.error(err);
     }
-    catch (err) { console.error(err) }
 
     if (updatedInventory) {
-        let userDetails = await User.findById(id)
-        let { cart, allOrders } = userDetails
-        allOrders = [...allOrders, { date: `${year}/${month}/${day}   ${hours}:${minutes}:${seconds}`, showOrder: false, cart }]
+        const user = await User.findById(id);
+        const { allOrders } = user;
+        allOrders = [...allOrders, { date: `${year}/${month}/${day}   ${hours}:${minutes}:${seconds}`, showOrder: false, cart }];
 
         try {
-            let success = await User.findByIdAndUpdate(id, { allOrders: allOrders, cart: [] })
-            return res.send('payment successful')
+            await User.findByIdAndUpdate(id, { allOrders, cart: [] });
+            res.status(200).json({ message: 'Payment successful' });
+        } catch (err) {
+            console.error(err);
+            res.status(500).send('Internal Server Error');
         }
-        catch (err) { console.error(err) }
+    } else {
+        res.status(400).json({ message: 'Payment unsuccessful' });
     }
-    return res.send('payment unsuccessful')
-}
+};
 
-const handle_Search = async (req, res) => {
-    let { itemId } = req.params
-    let searchItem = itemId.charAt(0).toUpperCase() + itemId.slice(1)
+exports.handleSearch = async (req, res) => {
     try {
-        let findItem = await Inventory.findOne({ item: searchItem })
-        if (findItem) return res.json({ findItem })
-        return res.send('item not found')
-    }
-    catch (err) { console.error(err) }
-}
+        const { itemId } = req.params;
+        const searchItem = itemId.charAt(0).toUpperCase() + itemId.slice(1);
+        const item = await Inventory.findOne({ item: searchItem });
 
-module.exports = { handle_Search, handle_AddGoods, handle_AllItem, handle_Viewmore, handle_Done, handle_Edit, handle_Delete, handle_CheckOut }
+        if (findItem) {
+            return res.status(200).json({ item });
+        }
+
+        return res.status(404).send('Item not found');
+    } catch (err) {
+        console.error(err);
+        return res.status(500).send('Internal Server Error');
+    }
+};
