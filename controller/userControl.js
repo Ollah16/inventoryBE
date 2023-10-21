@@ -44,13 +44,12 @@ const handleUserLogin = async (req, res) => {
 
         if (user) {
             const isPasswordValid = await bcrypt.compare(password, user.password);
-
             if (isPasswordValid) {
                 const { id } = user;
                 const accessToken = jwt.sign({ id }, jwtSecretKey);
                 res.status(200).json({ mesage: 'login successful', accessToken });
             } else {
-                return res.status(401).json({ message: 'Invalid email or password. Please try again.' });
+                return res.json({ message: 'Invalid email or password. Please try again.' });
             }
         } else {
             return res.status(401).json({ message: 'Invalid email or password. Please try again.' });
