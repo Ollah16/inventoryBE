@@ -47,7 +47,7 @@ const handleUserLogin = async (req, res) => {
             if (isPasswordValid) {
                 const { id } = user;
                 const accessToken = jwt.sign({ id }, jwtSecretKey);
-                res.json({ accessToken, mesage: 'login successful' });
+                res.json({ accessToken, message: 'login successful' });
             } else {
                 return res.json({ message: 'Invalid email or password. Please try again.' });
             }
