@@ -1,5 +1,5 @@
 const express = require("express")
-const { handleRegistration, handleLogin, handleUserCart, handleClearCart, handleRemoveItem, handleCartItem, addPersonalDetails, handleAddAddress, handleOrderRecords, handleFetchAddress, handleFetchPersonalDetails, handleVerifyPassword, handleAddressEdit, handleAddressDelete, } = require("../controller/userControl")
+const { handleUserRegistration, handleUserLogin, handleUserCart, handleClearCart, handleRemoveItem, handleCartItem, addPersonalDetails, handleAddAddress, handleOrderRecords, handleFetchAddress, handleFetchPersonalDetails, handleVerifyPassword, handleAddressEdit, handleAddressDelete, } = require("../controller/userControl")
 const router = express.Router()
 const jwt = require('jsonwebtoken')
 const jwtSecretKey = process.env.JWTSECRETKEY
@@ -7,16 +7,17 @@ const jwtSecretKey = process.env.JWTSECRETKEY
 
 const jwtMiddleWare = async (req, res, next) => {
     let { authorization } = req.headers
+    console.log(authorization)
     let [, myJwt] = authorization.split(' ')
-    let userId = jwt.verify(myJwt, jwtSecretKey)
+    const userId = jwt.verify(myJwt, jwtSecretKey)
     if (userId) {
         req.userId = userId
         next()
     }
 }
 
-router.post('/register', handleRegistration)
-router.post('/login', handleLogin)
+router.post('/register', handleUserRegistration)
+router.post('/login', handleUserLogin)
 router.get('/fetchcart', jwtMiddleWare, handleUserCart)
 router.post('/cart/:itemId', jwtMiddleWare, handleCartItem)
 router.patch('/removeItem/:itemId', jwtMiddleWare, handleRemoveItem)

@@ -3,7 +3,7 @@ const bcrypt = require('bcrypt')
 const jwt = require('jsonwebtoken')
 const jwtSecretKey = process.env.JWTSECRETKEY
 
-const handleRegistration = async (req, res) => {
+const handleUserRegistration = async (req, res) => {
     try {
         const { email, title, password, firstName, lastName, mobNumber } = req.body;
 
@@ -27,17 +27,17 @@ const handleRegistration = async (req, res) => {
 
             await newUser.save();
 
-            res.send('Registration successful');
+            res.json({ message: 'Registration successful' });
         } else {
-            res.send('User already exists');
+            res.send({ message: 'User already exists' });
         }
     } catch (err) {
         console.error(err);
-        res.status(500).send('Registration failed');
+        res.status(500).send({ message: 'Registration failed' });
     }
 };
 
-const handleLogin = async (req, res) => {
+const handleUserLogin = async (req, res) => {
     try {
         const { email, password } = req.body;
         const user = await User.findOne({ email });
@@ -48,17 +48,16 @@ const handleLogin = async (req, res) => {
             if (isPasswordValid) {
                 const { id } = user;
                 const accessToken = jwt.sign({ id }, jwtSecretKey);
-
-                return res.json({ accessToken });
+                res.status(200).json({ mesage: 'login successful', accessToken });
             } else {
-                return res.status(401).send('Invalid email or password. Please try again.');
+                return res.status(401).json({ message: 'Invalid email or password. Please try again.' });
             }
         } else {
-            return res.status(401).send('Invalid email or password. Please try again.');
+            return res.status(401).json({ message: 'Invalid email or password. Please try again.' });
         }
     } catch (err) {
         console.error(err);
-        res.status(500).send('Login failed');
+        res.status(500).send({ message: 'Login failed' });
     }
 };
 
@@ -276,7 +275,7 @@ const handleOrderRecords = async (req, res) => {
     const userId = req.userId.id;
     try {
         const user = await User.findById(userId);
-
+        console.log(user)
         if (!user) {
             return res.status(404).json({ message: 'User not found.' });
         }
@@ -372,8 +371,8 @@ module.exports = {
     handleAddressEdit,
     handleFetchAddress,
     handleFetchPersonalDetails,
-    handleRegistration,
-    handleLogin,
+    handleUserRegistration,
+    handleUserLogin,
     handleUserCart,
     handleClearCart,
     handleRemoveItem,
