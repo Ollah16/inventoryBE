@@ -17,7 +17,7 @@ const jwtMiddleWare = async (req, res, next) => {
 
 router.post('/register', handleUserRegistration)
 router.post('/login', handleUserLogin)
-router.get('/fetchcart', jwtMiddleWare, handleUserCart)
+router.get('/pullcart', jwtMiddleWare, handleUserCart)
 router.post('/cart/:itemId', jwtMiddleWare, handleCartItem)
 router.patch('/removeItem/:itemId', jwtMiddleWare, handleRemoveItem)
 router.delete('/clearCart', jwtMiddleWare, handleClearCart)
