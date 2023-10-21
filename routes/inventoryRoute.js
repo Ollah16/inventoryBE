@@ -49,7 +49,7 @@ router.get('/viewmore/:itemId', handleViewMore)
 router.patch('/edit/:itemId', handleEditItem)
 router.post('/save/:itemId', myStorage.single('image'), handleSaveChanges)
 router.delete('/delete/:itemId', handleDeleteItem)
-router.get('/cancel/:itemId', handleCancelChanges)
+router.patch('/cancel/:itemId', handleCancelChanges)
 router.post('/checkout', jwtMiddleWare, handleCheckout)
 router.get('/searchItem/:itemId', handleSearch)
 

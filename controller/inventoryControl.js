@@ -1,14 +1,13 @@
 const { Inventory, User } = require("../models/inventoryModel");
 const { handleS3Upload } = require("../s3Service");
 
-exports.handleAddGoods = async (req, res) => {
+const handleAddGoods = async (req, res) => {
     try {
         const { item, quantity, price, detail, itemEdit, addItem, customerQuantity } = req.body;
         if (req.error) {
             return res.send(req.error.message);
         }
         await handleS3Upload(req.file)
-        console.log(req)
         const allGoods = Inventory({
             item,
             quantity,
@@ -28,7 +27,7 @@ exports.handleAddGoods = async (req, res) => {
     }
 };
 
-exports.handleGetGoods = async (req, res) => {
+const handleGetGoods = async (req, res) => {
     try {
         const allGoods = await Inventory.find({});
         res.json({ allGoods });
@@ -38,7 +37,7 @@ exports.handleGetGoods = async (req, res) => {
     }
 };
 
-exports.handleViewMore = async (req, res) => {
+const handleViewMore = async (req, res) => {
     try {
         const { itemId } = req.params;
         const viewedItem = await Inventory.findById(itemId);
@@ -49,7 +48,7 @@ exports.handleViewMore = async (req, res) => {
     }
 };
 
-exports.handleEditItem = async (req, res) => {
+const handleEditItem = async (req, res) => {
     try {
         const { itemId } = req.params;
         await Inventory.findByIdAndUpdate(itemId, { itemEdit: false });
@@ -60,11 +59,10 @@ exports.handleEditItem = async (req, res) => {
     }
 };
 
-exports.handleSaveChanges = async (req, res) => {
+const handleSaveChanges = async (req, res) => {
     const { itemId } = req.params;
     const { item, price, detail, quantity } = req.body;
     await handleS3Upload(req.file)
-
     try {
         const updateArea = { item, price, detail, quantity, image: req.originalname };
         await Inventory.findByIdAndUpdate(itemId, { ...updateArea, itemEdit: true });
@@ -75,9 +73,8 @@ exports.handleSaveChanges = async (req, res) => {
     }
 };
 
-exports.handleCancelChanges = async (req, res) => {
+const handleCancelChanges = async (req, res) => {
     const { itemId } = req.params;
-
     try {
         await Inventory.findByIdAndUpdate(itemId, { itemEdit: false });
         res.status(200).json({ message: 'Item updated successfully' });
@@ -87,7 +84,7 @@ exports.handleCancelChanges = async (req, res) => {
     }
 };
 
-exports.handleDeleteItem = async (req, res) => {
+const handleDeleteItem = async (req, res) => {
     const { itemId } = req.params;
     try {
         await Inventory.findByIdAndRemove(itemId);
@@ -98,7 +95,7 @@ exports.handleDeleteItem = async (req, res) => {
     }
 };
 
-exports.handleCheckout = async (req, res) => {
+const handleCheckout = async (req, res) => {
     const { userId } = req;
     const { id } = userId;
     const user = await User.findById(id);
@@ -141,7 +138,7 @@ exports.handleCheckout = async (req, res) => {
     }
 };
 
-exports.handleSearch = async (req, res) => {
+const handleSearch = async (req, res) => {
     try {
         const { itemId } = req.params;
         const searchItem = itemId.charAt(0).toUpperCase() + itemId.slice(1);
@@ -157,3 +154,8 @@ exports.handleSearch = async (req, res) => {
         return res.status(500).send('Internal Server Error');
     }
 };
+
+module.exports = {
+    handleAddGoods, handleGetGoods, handleViewMore, handleEditItem, handleSaveChanges, handleCancelChanges, handleDeleteItem
+    , handleCheckout, handleSearch
+}
