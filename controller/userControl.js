@@ -85,7 +85,6 @@ const handleCartItem = async (req, res) => {
         const user = await User.findById(id);
         const { cart } = user;
         const ifExist = cart.find((good) => good.id == itemId);
-
         if (ifExist) {
             const updateCart = cart.map((item) =>
                 item.id == itemId
@@ -98,7 +97,7 @@ const handleCartItem = async (req, res) => {
 
             const updatedCart = updateCart.filter((item) => item.customerQuantity >= 1);
             await User.findByIdAndUpdate(id, { cart: updatedCart });
-        } else if (!ifExist) {
+        } else {
             const findItem = await Inventory.findById(itemId);
             const { customerQuantity, item, price, image, id } = findItem;
             const newItem = {

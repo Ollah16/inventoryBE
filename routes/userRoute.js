@@ -7,7 +7,6 @@ const jwtSecretKey = process.env.JWTSECRETKEY
 
 const jwtMiddleWare = async (req, res, next) => {
     let { authorization } = req.headers
-    console.log(authorization)
     let [, myJwt] = authorization.split(' ')
     const userId = jwt.verify(myJwt, jwtSecretKey)
     if (userId) {
