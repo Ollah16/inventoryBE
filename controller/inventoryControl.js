@@ -11,7 +11,7 @@ const handleAddGoods = async (req, res) => {
         const allGoods = Inventory({
             item,
             quantity,
-            image: req.originalname,
+            image: req.file.originalname,
             price,
             detail,
             itemEdit,
@@ -64,7 +64,7 @@ const handleSaveChanges = async (req, res) => {
     const { item, price, detail, quantity } = req.body;
     await handleS3Upload(req.file)
     try {
-        const updateArea = { item, price, detail, quantity, image: req.originalname };
+        const updateArea = { item, price, detail, quantity, image: req.file.originalname };
         await Inventory.findByIdAndUpdate(itemId, { ...updateArea, itemEdit: true });
         res.status(200).json({ message: 'Item updated successfully' });
     } catch (error) {
