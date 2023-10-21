@@ -62,8 +62,8 @@ const handleEditItem = async (req, res) => {
 const handleSaveChanges = async (req, res) => {
     const { itemId } = req.params;
     const { item, price, detail, quantity } = req.body;
-    await handleS3Upload(req.file)
     try {
+        await handleS3Upload(req.file)
         const updateArea = { item, price, detail, quantity, image: req.file.originalname };
         await Inventory.findByIdAndUpdate(itemId, { ...updateArea, itemEdit: true });
         res.status(200).json({ message: 'Item updated successfully' });
@@ -155,7 +155,4 @@ const handleSearch = async (req, res) => {
     }
 };
 
-module.exports = {
-    handleAddGoods, handleGetGoods, handleViewMore, handleEditItem, handleSaveChanges, handleCancelChanges, handleDeleteItem
-    , handleCheckout, handleSearch
-}
+module.exports = { handleAddGoods, handleGetGoods, handleViewMore, handleEditItem, handleSaveChanges, handleCancelChanges, handleDeleteItem, handleCheckout, handleSearch }

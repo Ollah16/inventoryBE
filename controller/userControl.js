@@ -272,7 +272,7 @@ const handleAddAddress = async (req, res) => {
     }
 };
 
-const handleFetchAllOrders = async (req, res) => {
+const handleOrderRecords = async (req, res) => {
     const userId = req.userId.id;
     try {
         const user = await User.findById(userId);
@@ -380,5 +380,5 @@ module.exports = {
     handleCartItem,
     addPersonalDetails,
     handleAddAddress,
-    handleFetchAllOrders
+    handleOrderRecords
 }

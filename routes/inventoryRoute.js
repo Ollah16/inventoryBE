@@ -41,7 +41,6 @@ const fileFilter = (req, file, cb) => {
 const myStorage = multer({ storage, fileFilter })
 
 const { handleAddGoods, handleGetGoods, handleViewMore, handleEditItem, handleSaveChanges, handleDeleteItem, handleCheckout, handleSearch, handleCancelChanges } = require("../controller/inventoryControl")
-
 const router = express.Router()
 router.post('/addGoods', myStorage.single('image'), handleAddGoods)
 router.get('/getAllgoods', handleGetGoods)
