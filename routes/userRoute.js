@@ -1,7 +1,8 @@
 const express = require("express")
-const { handleUserRegistration, handleUserLogin, handleUserCart, handleClearCart, handleRemoveItem, handleCartItem, addPersonalDetails, handleAddAddress, handleOrderRecords, handleFetchAddress, handleFetchPersonalDetails, handleVerifyPassword, handleAddressEdit, handleAddressDelete, } = require("../controller/userControl")
+const { handleUserRegistration, handleUserLogin, handlePullCart, handleClearCart, handleRemoveItem, handleCartChanges, handleUpdateDetails, handleAddAddress, handleOrderRecords, handleFetchAddress, handleFetchPersonalDetails, handleAddressDelete, handleGetCartRecord, } = require("../controller/userControl")
 const router = express.Router()
 const jwt = require('jsonwebtoken')
+const { User, Record } = require("../models/inventoryModel")
 const jwtSecretKey = process.env.JWTSECRETKEY
 
 
@@ -17,15 +18,20 @@ const jwtMiddleWare = async (req, res, next) => {
 
 router.post('/register', handleUserRegistration)
 router.post('/login', handleUserLogin)
-router.get('/pullcart', jwtMiddleWare, handleUserCart)
-router.post('/cart/:itemId', jwtMiddleWare, handleCartItem)
+router.get('/pullCart', jwtMiddleWare, handlePullCart)
+router.post('/cart/:itemId', jwtMiddleWare, handleCartChanges)
 router.patch('/removeItem/:itemId', jwtMiddleWare, handleRemoveItem)
 router.delete('/clearCart', jwtMiddleWare, handleClearCart)
-router.post('/personalDetails', jwtMiddleWare, addPersonalDetails)
+router.post('/updateDetails', jwtMiddleWare, handleUpdateDetails)
 router.post('/addAddress', jwtMiddleWare, handleAddAddress)
 router.get('/records', jwtMiddleWare, handleOrderRecords)
+router.get('/getcartRecord/:recordId', jwtMiddleWare, handleGetCartRecord)
 router.get('/getAddress', jwtMiddleWare, handleFetchAddress)
 router.get('/getDetails', jwtMiddleWare, handleFetchPersonalDetails)
-router.patch('/editAddress/:addressId', jwtMiddleWare, handleAddressEdit)
 router.delete('/deleteAddress/:addressId', jwtMiddleWare, handleAddressDelete)
+
+
+
+
+
 module.exports = router;

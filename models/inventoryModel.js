@@ -9,10 +9,10 @@ let inventorySchema = new Schema({
     quantity: Number,
     image: String,
     price: Number,
-    detail: String,
-    itemEdit: Boolean,
+    description: String,
+    editItem: Boolean,
     addItem: Boolean,
-    customerQuantity: Number
+    userQuantity: Number
 })
 
 let Inventory = model('allGood', inventorySchema)
@@ -23,50 +23,69 @@ let userSchema = new Schema({
     password: String,
     firstName: String,
     lastName: String,
-    mobNumber: Number,
-    alterNumber: Number,
-    address: [{
-        title: String,
-        firstName: String,
-        lastName: String,
-        buildNum: Number,
-        buildname: String,
-        flatNum: Number,
-        street: String,
-        townStreet: String,
-        county: String,
-        addressNick: String,
-        delInstruct: String,
-        edit: Boolean
-    }],
-
-    cart: [{
-        customerQuantity: Number,
-        itemId: {
-            type: Schema.Types.ObjectId,
-            ref: Inventory
-        },
-        item: String,
-        price: Number,
-        image: String
-    }],
-
-    allOrders: [{
-        date: String,
-        showOrder: Boolean,
-        cart: [{
-            customerQuantity: Number,
-            itemId: {
-                type: Schema.Types.ObjectId,
-                ref: Inventory
-            },
-            item: String,
-            price: Number,
-            image: String
-        }]
-    }]
+    mobileNumber: Number,
+    alternativeNumber: Number
 })
 
-let User = model('user', userSchema)
+const recordSchema = new Schema({
+    date: String,
+    item: String,
+    userQuantity: Number,
+    image: String,
+    price: Number,
+    cost: Number,
+    cartId: {
+        type: Schema.Types.ObjectId,
+        ref: Inventory
+    },
+    itemId: {
+        type: Schema.Types.ObjectId,
+        ref: Inventory
+    },
+    userId: {
+        type: Schema.Types.ObjectId,
+        ref: Inventory
+    }
+})
+const cartSchema = new Schema({
+    addItem: Boolean,
+    userQuantity: Number,
+    item: String,
+    cost: Number,
+    image: String,
+    price: Number,
+    itemId: {
+        type: Schema.Types.ObjectId,
+        ref: Inventory
+    },
+    userId: {
+        type: Schema.Types.ObjectId,
+        ref: Inventory
+    }
+})
 
-module.exports = { Inventory, User }
+const addressSchema = new Schema({
+    title: String,
+    firstName: String,
+    lastName: String,
+    buildingNumber: Number,
+    buildingName: String,
+    flatNumber: Number,
+    street: String,
+    townStreet: String,
+    county: String,
+    addressName: String,
+    userId: {
+        type: Schema.Types.ObjectId,
+        ref: Inventory
+    }
+})
+
+
+const User = model('user', userSchema)
+const Address = model('address', addressSchema)
+const Cart = model('cart', cartSchema)
+const Record = model('records', recordSchema)
+
+
+module.exports = { Inventory, User, Cart, Address, Record }
