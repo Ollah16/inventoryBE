@@ -198,7 +198,6 @@ const handleAddAddress = async (req, res) => {
         if (!user) {
             return res.status(404).json({ message: 'User not found.' });
         }
-        console.log(editId)
         if (!editId) {
             const address = new Address({
                 title,
@@ -240,33 +239,37 @@ const handleOrderRecords = async (req, res) => {
     try {
         const { id } = req.userId;
 
-        const user = await User.findById(id);
+        const user = await User.findById(userId);
         if (!user) {
             return res.status(404).json({ message: 'User not found.' });
         }
 
         const uniqueRecords = await Record.aggregate([
             {
+                $match: {
+                    userId: id
+                },
+            },
+            {
                 $group: {
                     _id: "$cartId",
                     userId: { $first: "$userId" },
                     date: { $first: "$date" },
-                    cartId: { $first: "$cartId" }
-                }
-            }
+                    cartId: { $first: "$cartId" },
+                },
+            },
         ]).exec();
-
-
         if (uniqueRecords.length > 0) {
             return res.status(200).json({ records: uniqueRecords });
         } else {
-            return res.status(200).json({ message: 'No order records found.' });
+            return res.status(200).json({ message: 'No order records found for this user.' });
         }
     } catch (error) {
         console.error("Error during aggregation: ", error);
         return res.status(500).json({ message: 'Internal server error' });
     }
 };
+
 
 
 const handleGetCartRecord = async (req, res) => {
