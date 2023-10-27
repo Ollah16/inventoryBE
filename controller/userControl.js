@@ -1,6 +1,7 @@
 const { User, Inventory, Cart, Address, Record } = require('../models/inventoryModel')
 const bcrypt = require('bcrypt')
-const jwt = require('jsonwebtoken')
+const jwt = require('jsonwebtoken');
+
 const jwtSecretKey = process.env.JWTSECRETKEY
 
 const handleUserRegistration = async (req, res) => {
@@ -234,42 +235,35 @@ const handleAddAddress = async (req, res) => {
     }
 };
 
-
 const handleOrderRecords = async (req, res) => {
     try {
-        const { id } = req.userId;
-
+        const userId = req.userId.id;
         const user = await User.findById(userId);
         if (!user) {
             return res.status(404).json({ message: 'User not found.' });
         }
-
-        const uniqueRecords = await Record.aggregate([
-            {
-                $match: {
-                    userId: id
-                },
-            },
+        let uniqueRecords = await Record.aggregate([
             {
                 $group: {
                     _id: "$cartId",
                     userId: { $first: "$userId" },
                     date: { $first: "$date" },
-                    cartId: { $first: "$cartId" },
-                },
-            },
+                    cartId: { $first: "$cartId" }
+                }
+            }
         ]).exec();
+        console.log(uniqueRecords)
         if (uniqueRecords.length > 0) {
+            uniqueRecords = uniqueRecords.filter(user => userId == user.userId)
             return res.status(200).json({ records: uniqueRecords });
         } else {
-            return res.status(200).json({ message: 'No order records found for this user.' });
+            return res.status(200).json({ message: 'No order records found.' });
         }
     } catch (error) {
         console.error("Error during aggregation: ", error);
         return res.status(500).json({ message: 'Internal server error' });
     }
 };
-
 
 
 const handleGetCartRecord = async (req, res) => {
