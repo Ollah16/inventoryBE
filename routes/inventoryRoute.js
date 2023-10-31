@@ -29,7 +29,7 @@ const myStorage = multer({ storage, fileFilter })
 
 const { handleAddGoods, handleGetGoods, handleViewMore, handleEditItem, handleSaveChanges, handleDeleteItem, handleCheckout, handleSearch, handleCancelChanges } = require("../controller/inventoryControl")
 const router = express.Router()
-router.post('/addGoods', myStorage.single('image'), handleAddGoods)
+router.post('/addGoods', myStorage.single('image'), jwtMiddleWare, handleAddGoods)
 router.get('/getgoods', handleGetGoods)
 router.get('/viewmore/:itemId', handleViewMore)
 router.patch('/edit/:itemId', handleEditItem)
