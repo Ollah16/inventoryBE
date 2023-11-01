@@ -31,6 +31,7 @@ const { handleAddGoods, handleGetGoods, handleViewMore, handleEditItem, handleSa
 const router = express.Router()
 router.post('/addGoods', myStorage.single('image'), jwtMiddleWare, handleAddGoods)
 router.get('/getgoods', handleGetGoods)
+router.get('/getAllgoods', handleGetGoods)
 router.get('/viewmore/:itemId', handleViewMore)
 router.patch('/edit/:itemId', handleEditItem)
 router.post('/save/:itemId', myStorage.single('image'), handleSaveChanges)
