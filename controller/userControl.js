@@ -202,13 +202,8 @@ const handleAddAddress = async (req, res) => {
         const { id } = req.userId;
         const { data: { title, firstName, lastName, buildingNumber, buildingName, flatNumber, street, county, addressName, editId } } = req.body;
 
-        const user = await User.findById(id);
-
-        if (!user) {
-            return res.status(404).json({ message: 'User not found.' });
-        }
         if (!editId) {
-            const address = new Address({
+            const newAddress = new Address({
                 title,
                 firstName,
                 lastName,
@@ -220,10 +215,10 @@ const handleAddAddress = async (req, res) => {
                 addressName,
                 userId: id
             });
-            await address.save();
-            res.status(200).json({ message: 'New Address added successfully' });
+            await newAddress.save();
         } else {
-            await Address.findOneAndUpdate({ userId: id }, {
+
+            await Address.findOneAndUpdate({ userId: id, _id: editId }, {
                 title,
                 firstName,
                 lastName,
@@ -235,15 +230,17 @@ const handleAddAddress = async (req, res) => {
                 addressName,
                 userId: id
             })
-
-            const address = await Address.find({ userId: id });
-            return res.status(200).json({ address });
         }
+
+        const updatedAddresses = await Address.find({ userId: id });
+
+        return res.status(200).json({ address: updatedAddresses });
     } catch (error) {
         console.error('Error adding/updating address:', error);
         res.status(500).json({ message: 'An error occurred while processing the request.' });
     }
 };
+
 
 const handleOrderRecords = async (req, res) => {
     try {
