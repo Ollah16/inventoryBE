@@ -126,6 +126,8 @@ const handleCheckout = async (req, res) => {
                 await records.save();
             }
             await Cart.deleteMany({ userId: id });
+
+
             res.status(200).json({ message: 'Payment successful' });
         } catch (error) {
             console.error(error);
