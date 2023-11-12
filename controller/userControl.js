@@ -115,8 +115,8 @@ const handleCartChanges = async (req, res) => {
             await Cart.findOneAndDelete({ itemId, userId: id });
         }
 
-        handlePullCart()
-        res.status(200).json({ message: 'Cart item updated successfully' });
+        const cart = await Cart.find({ userId: id });
+        return res.json({ cart });
 
     } catch (err) {
         console.error(err);
@@ -130,8 +130,8 @@ const handleClearCart = async (req, res) => {
     try {
         const { id } = req.userId;
         await Cart.deleteMany({ userId: id });
-        handlePullCart()
-        return res.status(200).json({ message: 'The cart has been cleared successfully.' });
+        const cart = await Cart.find({ userId: id });
+        return res.json({ cart });
 
     } catch (err) {
         console.error(err);
@@ -155,8 +155,8 @@ const handleRemoveItem = async (req, res) => {
             return res.status(404).json({ message: 'Cart item not found.' });
         }
 
-        handlePullCart()
-        res.status(200).json({ message: 'Cart item has been removed successfully.' });
+        const cart = await Cart.find({ userId: id });
+        return res.json({ cart });
 
     } catch (error) {
         console.error('Error removing item from cart:', error);
@@ -186,9 +186,10 @@ const handleUpdateDetails = async (req, res) => {
             title, email, firstName, password: hashedPassword, lastName, mobileNumber, alternativeNumber
         });
 
-        handleFetchPersonalDetails()
+        const updatedUser = await User.findById(id);
 
-        res.status(200).json({ message: 'User details updated successfully.' });
+        return res.status(200).json({ user: updatedUser });
+
     } catch (err) {
         console.error(err);
         return res.status(500).json({ message: 'An error occurred while processing the request.' });
@@ -234,8 +235,9 @@ const handleAddAddress = async (req, res) => {
                 addressName,
                 userId: id
             })
-            handleFetchAddress()
-            res.status(200).json({ message: 'Address changes completed' });
+
+            const address = await Address.find({ userId: id });
+            return res.status(200).json({ address });
         }
     } catch (error) {
         console.error('Error adding/updating address:', error);
@@ -332,9 +334,11 @@ const handleAddressDelete = async (req, res) => {
         const { addressId } = req.params;
         const user = await User.findById(id);
         if (!user) return res.json({ message: 'user not found' })
+
         await Address.findOneAndDelete({ _id: addressId });
-        handleFetchAddress()
-        res.json({ message: 'Deletion of the address was successful.' })
+        const address = await Address.find({ userId: id });
+
+        return res.json({ address });
 
     } catch (error) {
         console.error('Error deleting user address:', error);
