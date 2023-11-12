@@ -168,12 +168,13 @@ const handleUpdateDetails = async (req, res) => {
     try {
         const { id } = req.userId;
         const { title, firstName, lastName, email, existingPassword, newPassword, mobileNumber, alternativeNumber } = req.body;
+        console.log(id)
 
         const user = await User.findById(id);
         if (!user) {
             return res.status(404).json({ message: 'User not found.' });
         }
-
+        console.log(id)
         const isPasswordValid = await bcrypt.compare(existingPassword, user.password);
         if (!isPasswordValid) {
             return res.status(401).json({ message: 'Incorrect password.' });
@@ -187,7 +188,7 @@ const handleUpdateDetails = async (req, res) => {
         });
 
         const updatedUser = await User.findById(id);
-
+        console.log(updatedUser)
         return res.status(200).json({ user: updatedUser });
 
     } catch (err) {
@@ -201,7 +202,6 @@ const handleAddAddress = async (req, res) => {
         const { id } = req.userId;
         const { data: { title, firstName, lastName, buildingNumber, buildingName, flatNumber, street, county, addressName, editId } } = req.body;
 
-        console.log(req.body, id)
         const user = await User.findById(id);
 
         if (!user) {
